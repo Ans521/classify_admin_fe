@@ -1,53 +1,112 @@
 import React, { useState } from 'react';
-import { ChevronDown, Eye, EyeOff } from 'lucide-react';
+import { ChevronDown, Eye, EyeOff, X } from 'lucide-react';
 import Sidebar from '../sidebar/sidebar';
 import Navbar from '../navbar/navbar';
+import axios from 'axios';
+// import { FaProjectDiagram } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 interface FormData {
   name: string;
-  phone: string;
   email: string;
-  address: string;
-  category: string;
-  subCategory: string;
+  // phoneNo: string;
+  password: string;
   mpin: string;
-  mpinVerify: string;
+  address: string;
+  aadharCard: File | null;
+  drivingLicense: File | null;
+  panCard: File | null;
 }
 
 const AddProvider: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
-    name: '',
-    phone: '',
-    email: '',
-    address: '',
-    category: '',
-    subCategory: '',
-    mpin: '',
-    mpinVerify: ''
+    name: "",
+    email: "",
+    // phoneNo: "",
+    address: "",
+    password: "",
+    mpin: "",
+    aadharCard: null,
+    drivingLicense: null,
+    panCard: null,
   });
 
+  const [showPassword, setShowPassword] = useState(false);
   const [showMpin, setShowMpin] = useState(false);
-  const [showMpinVerify, setShowMpinVerify] = useState(false);
+  const [previewUrls, setPreviewUrls] = useState<{
+    aadharCard: string | null;
+    drivingLicense: string | null;
+    panCard: string | null;
+  }>({
+    aadharCard: null,
+    drivingLicense: null,
+    panCard: null,
+  });
 
-  // Mock data for dropdowns
-  const categories = ['Salon', 'Spa', 'Wellness', 'Beauty'];
-  const subCategories = ['Hair Care', 'Skin Care', 'Massage', 'Nail Care'];
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if(formData.mpin !== formData.mpinVerify){
-      alert('MPINs do not match');
-      return;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof typeof previewUrls) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // setFormData((prev) => ({ ...prev, [field]: file }));
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrls((prev) => ({ ...prev, [field]: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
     }
   };
+
+  const api = axios.create({
+    'baseURL' : 'http://13.202.163.238:3000/api'
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      // const formDataToSend = new FormData();
+      // Object.entries(formData).forEach(([key, value]) => {
+      //   if (value !== null) {
+      //     formDataToSend.append(key, value);
+      //   }
+      // });
+      if(formData.mpin !== formData.password){
+        alert("Mpin do not match");
+        return;
+      }
+      console.log(formData);
+      const response = await api.post("/add-provider", formData);
+      if (response?.status === 200) {
+        alert("Provider added successfully");
+        // Reset form
+        setFormData({
+          name: "",
+          email: "",
+          // phoneNo: "",
+          password: "",
+          mpin: "",
+          address: "",
+          aadharCard: null,
+          drivingLicense: null,
+          panCard: null,
+        });
+        setPreviewUrls({
+          aadharCard: null,
+          drivingLicense: null,
+          panCard: null,
+        });
+      }
+    } catch (error) {
+      console.error("Error adding provider:", error);
+      alert("Failed to add provider. Please try again.");
+    }
+  };
+
 
   return (
     <div className="flex h-screen bg-[#FFFFFF]">
@@ -55,206 +114,246 @@ const AddProvider: React.FC = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
         <div className="flex-1 overflow-y-auto bg-[#F0F2FD] p-6">
-          <div className="mb-4 ml-20">
-            <h1 className="text-2xl md:text-2xl font-bold text-gray-800">Complete Profile</h1>
-          </div>
-          
-          {/* Form Container */}
-          <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md">
-            <form onSubmit={handleSubmit} className="p-8 space-y-6">
-              {/* Name Input */}
-              <div className="space-y-2">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                  Name
-                </label>
-                <div className="relative">
+          <div className="max-w-3xl mx-auto">
+            <div className="bg-white rounded-xl shadow-lg p-6 mb-8 transform transition-all duration-300 hover:shadow-xl">
+              <h1 className="text-3xl font-bold text-gray-800 mb-2 text-center">Add New Provider</h1>
+              <p className="text-gray-600 text-center">Fill in the details to register a new service provider</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Existing form fields */}
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                   <input
                     type="text"
-                    id="name"
                     name="name"
                     value={formData.name}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none transition-all duration-200 focus:ring-2 focus:ring-[#6362E7] focus:border-[#6362E7]"
-                    placeholder="Enter your name"
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent"
                     required
                   />
                 </div>
-              </div>
 
-              {/* Phone Input */}
-              <div className="space-y-2">
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                  Phone Number <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none transition-all duration-200 focus:ring-2 focus:ring-[#6362E7] focus:border-[#6362E7]"
-                    placeholder="Enter your phone number"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Email Input */}
-              <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                  Email
-                </label>
-                <div className="relative">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <input
                     type="email"
-                    id="email"
                     name="email"
                     value={formData.email}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none transition-all duration-200 focus:ring-2 focus:ring-[#6362E7] focus:border-[#6362E7]"
-                    placeholder="Enter your email"
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent"
                     required
                   />
                 </div>
-              </div>
 
-              {/* Address Input */}
-              <div className="space-y-2">
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                  Address
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    id="address"
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                  <textarea
                     name="address"
                     value={formData.address}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none transition-all duration-200 focus:ring-2 focus:ring-[#6362E7] focus:border-[#6362E7]"
-                    placeholder="Enter your address"
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent"
+                    rows={3}
                     required
                   />
                 </div>
-              </div>
 
-              {/* MPIN Input */}
-              <div className="space-y-2">
-                <label htmlFor="mpin" className="block text-sm font-medium text-gray-700">
-                  MPIN <span className="text-gray-400 text-xs ml-1">(Optional)</span>
-                </label>
-                <div className="relative">
+                {/* <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                   <input
-                    type={showMpin ? "text" : "password"}
-                    id="mpin"
-                    name="mpin"
-                    value={formData.mpin}
-                    onChange={handleChange}
-                    maxLength={4}
-                    pattern="[0-9]*"
-                    inputMode="numeric"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none transition-all duration-200 focus:ring-2 focus:ring-[#6362E7] focus:border-[#6362E7]"
-                    placeholder="Enter 4-digit MPIN"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowMpin(!showMpin)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    {showMpin ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500">Set a 4-digit MPIN for quick access</p>
-              </div>
-
-              {/* MPIN Verification Input */}
-              <div className="space-y-2">
-                <label htmlFor="mpinVerify" className="block text-sm font-medium text-gray-700">
-                  Verify MPIN <span className="text-gray-400 text-xs ml-1">(Optional)</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showMpinVerify ? "text" : "password"}
-                    id="mpinVerify"
-                    name="mpinVerify"
-                    value={formData.mpinVerify}
-                    onChange={handleChange}
-                    maxLength={4}
-                    pattern="[0-9]*"
-                    inputMode="numeric"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none transition-all duration-200 focus:ring-2 focus:ring-[#6362E7] focus:border-[#6362E7]"
-                    placeholder="Verify your 4-digit MPIN"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowMpinVerify(!showMpinVerify)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    {showMpinVerify ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500">Re-enter your MPIN to verify</p>
-              </div>
-
-              {/* Category Dropdown */}
-              <div className="space-y-2">
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-                  Category
-                </label>
-                <div className="relative">
-                  <select
-                    id="category"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none outline-none transition-all duration-200 focus:ring-2 focus:ring-[#6362E7] focus:border-[#6362E7]"
+                    type="tel"
+                    name="phoneNo"
+                    value={formData.phoneNo}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent"
                     required
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
+                  />
+                </div> */}
+
+                <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                    MPIN (Optional)
+                    <span className="text-gray-500 text-xs ml-2">For additional security</span>
+                  </label>                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    MPIN (Optional)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showMpin ? "text" : "password"}
+                      name="mpin"
+                      value={formData.mpin}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowMpin(!showMpin)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showMpin ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Sub Category Dropdown */}
-              <div className="space-y-2">
-                <label htmlFor="subCategory" className="block text-sm font-medium text-gray-700">
-                  Sub Category
-                </label>
-                <div className="relative">
-                  <select
-                    id="subCategory"
-                    name="subCategory"
-                    value={formData.subCategory}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg appearance-none outline-none transition-all duration-200 focus:ring-2 focus:ring-[#6362E7] focus:border-[#6362E7]"
-                    required
-                  >
-                    <option value="">Select a sub category</option>
-                    {subCategories.map((subCategory) => (
-                      <option key={subCategory} value={subCategory}>
-                        {subCategory}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
+              {/* Document Upload Fields */}
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold text-gray-800">Document Uploads</h2>
+                
+                {/* Aadhar Card */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Aadhar Card</label>
+                  <div className="flex items-center space-x-4">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileChange(e, 'aadharCard')}
+                      className="hidden"
+                      id="aadharCard"
+                    />
+                    <label
+                      htmlFor="aadharCard"
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors"
+                    >
+                      Choose File
+                    </label>
+                    {previewUrls.aadharCard && (
+                      <div className="relative w-24 h-24">
+                        <img
+                          src={previewUrls.aadharCard}
+                          alt="Aadhar Card Preview"
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, aadharCard: null }));
+                            setPreviewUrls(prev => ({ ...prev, aadharCard: null }));
+                          }}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Driving License */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Driving License (Optional)
+                    <span className="text-gray-500 text-xs ml-2">Upload if available</span>
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileChange(e, 'drivingLicense')}
+                      className="hidden"
+                      id="drivingLicense"
+                    />
+                    <label
+                      htmlFor="drivingLicense"
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors"
+                    >
+                      Choose File
+                    </label>
+                    {previewUrls.drivingLicense && (
+                      <div className="relative w-24 h-24">
+                        <img
+                          src={previewUrls.drivingLicense}
+                          alt="Driving License Preview"
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, drivingLicense: null }));
+                            setPreviewUrls(prev => ({ ...prev, drivingLicense: null }));
+                          }}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* PAN Card */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">PAN Card</label>
+                  <div className="flex items-center space-x-4">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileChange(e, 'panCard')}
+                      className="hidden"
+                      id="panCard"
+                    />
+                    <label
+                      htmlFor="panCard"
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors"
+                    >
+                      Choose File
+                    </label>
+                    {previewUrls.panCard && (
+                      <div className="relative w-24 h-24">
+                        <img
+                          src={previewUrls.panCard}
+                          alt="PAN Card Preview"
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, panCard: null }));
+                            setPreviewUrls(prev => ({ ...prev, panCard: null }));
+                          }}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Submit Button */}
-              <div className="pt-4">
+              <div className="flex justify-center space-x-4">
                 <button
                   type="submit"
-                  onClick={handleSubmit}
-                  className="w-full bg-[#6362E7] text-white py-2.5 px-4 rounded-lg hover:bg-[#5251c7] transition-all duration-200 outline-none focus:ring-2 focus:ring-[#6362E7] focus:ring-offset-2"
+                  className="px-8 py-3 bg-[#6362E7] text-white font-semibold rounded-lg shadow-md hover:bg-[#5251c7] focus:outline-none focus:ring-2 focus:ring-[#6362E7] focus:ring-opacity-50 transform transition-all duration-300 hover:scale-105"
                 >
-                  Next
+                  Add Provider
                 </button>
+                <Link
+                  to="/service-provider/view"
+                  className="px-8 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 transform transition-all duration-300 hover:scale-105"
+                >
+                  Cancel
+                </Link>
               </div>
             </form>
           </div>

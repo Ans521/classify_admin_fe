@@ -3,9 +3,8 @@ import Navbar from "../navbar/navbar";
 import Sidebar from "../sidebar/sidebar";
 import { useLocation } from "react-router-dom";
 
-const ProviderList: React.FC = () => {
+const ProviderList = () => {
   const location = useLocation();
-  console.log(location.pathname);
   return (
     location.pathname === "/service-provider" && (
       <div className="flex flex-col w-full h-full">

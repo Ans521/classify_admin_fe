@@ -21,13 +21,15 @@ const UserDocument: React.FC = () => {
   const documents = ["Aadhar Card", "Pan Card", "Driving Licence"];
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isLoading, setIsLoading ] = useState<boolean>(true);
 
   const api = axios.create({
-    'baseURL' : 'http://localhost:4000/api'
+    'baseURL' : 'http://13.202.163.238:3000/api'
   });
 
   const handleViewDocument = async () => {
     try {
+      setIsLoading(true)
       setError(null);
       const response = await api.get(`/get-provider-list`);
       if (Array.isArray(response.data?.data)) {
@@ -47,7 +49,9 @@ const UserDocument: React.FC = () => {
       console.error("Error fetching provider list:", error);
       setError("Failed to load documents. Please try again later.");
       setImage([]);
-    } 
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -127,16 +131,16 @@ const UserDocument: React.FC = () => {
   };
 
   // console.log()
-  // if (isLoading) {
-  //   return (
-  //     <div className="flex justify-center items-center h-screen">
-  //       <div className="text-center">
-  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6362E7] mx-auto"></div>
-  //         <p className="mt-4 text-gray-600">Loading documents...</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6362E7] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading documents...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
