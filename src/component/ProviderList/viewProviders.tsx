@@ -20,7 +20,9 @@ const ViewProvider: React.FC = () => {
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState('');
   const [providerList, setProviderList] = useState<ServiceProvider[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<ServiceProvider[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const {id} = useParams();
   console.log("id", id);
   // Mock data - replace with actual API call later
@@ -39,6 +41,20 @@ const ViewProvider: React.FC = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredProviders.slice(indexOfFirstItem, indexOfLastItem);
 
+  // Update suggestions when search term changes
+  useEffect(() => {
+    if (searchTerm.length > 0) {
+      const filtered = providerList.filter(provider => 
+        provider?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setSuggestions(filtered);
+      setShowSuggestions(true);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [searchTerm, providerList]);
+
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
   };
@@ -49,7 +65,7 @@ const ViewProvider: React.FC = () => {
   };
 
   const api = axios.create({
-    'baseURL' : 'http://localhost:4000/api'
+    'baseURL' : 'http://13.202.163.238:3000/api'
   })
 
   const handleViewDocument = async () => {
@@ -91,16 +107,37 @@ const ViewProvider: React.FC = () => {
                   <p className="mt-1 text-sm text-gray-600">Manage and view all service providers</p>
                 </div>
                 <div className="flex flex-col md:flex-row gap-4">
-                  {/* Search Bar */}
+                  {/* Search Bar with Auto-suggestions */}
                   <div className="relative">
                     <input
                       type="text"
-                      placeholder="Search providers..."
+                      placeholder="Search by name or phone number..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
+                      onFocus={() => setShowSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                       className="w-full md:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent"
                     />
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                    
+                    {/* Suggestions Dropdown */}
+                    {showSuggestions && suggestions.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg max-h-60 overflow-auto">
+                        {suggestions.map((provider, index) => (
+                          <div
+                            key={index}
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                            onClick={() => {
+                              setSearchTerm(provider.name);
+                              setShowSuggestions(false);
+                            }}
+                          >
+                            <span className="text-sm text-gray-800">{provider.name}</span>
+                            <span className="text-xs text-gray-500">{provider.phoneNo}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   {/* Filter Button */}
                   <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
@@ -113,9 +150,14 @@ const ViewProvider: React.FC = () => {
 
             {/* Loading State */}
             {isLoading ? (
-              <div className="flex justify-center items-center p-12">
-                <div className=" rounded-full h-12 w-12 border-b-2 border-[#6362E7]"></div>
-                <span className="ml-3 text-gray-600">Loading providers...</span>
+              <div className="flex flex-col items-center justify-center p-12">
+                <div className="relative">
+                  <div className="w-12 h-12 border-4 border-[#6362E7] border-t-transparent rounded-full animate-spin"></div>
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <div className="w-6 h-6 border-2 border-[#6362E7] border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                </div>
+                <p className="mt-4 text-gray-600 font-medium">Loading providers...</p>
               </div>
             ) : (
               <>
