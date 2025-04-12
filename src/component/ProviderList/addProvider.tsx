@@ -1,112 +1,134 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown, Eye, EyeOff, X } from 'lucide-react';
 import Sidebar from '../sidebar/sidebar';
 import Navbar from '../navbar/navbar';
 import axios from 'axios';
 // import { FaProjectDiagram } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { usePhoneNumber, useSetPhoneNumber } from '../context';
 
 interface FormData {
   name: string;
   email: string;
-  // phoneNo: string;
   password: string;
   mpin: string;
   address: string;
-  aadharCard: File | null;
-  drivingLicense: File | null;
-  panCard: File | null;
+  aadharCard: null,
+  panCard:  null,
+  drivingLicense: null;
+}
+
+interface FileUrls {
+  aadharCard: any | null;
+  drivingLicense: any | null;
+  panCard: any | null;
 }
 
 const AddProvider: React.FC = () => {
+  const navigate = useNavigate();
+  const phoneNumber = usePhoneNumber();
+  const setPhoneNumber = useSetPhoneNumber();
+  useEffect(() => {
+    // If no phone number in context, redirect to phone verification
+    if (!phoneNumber) {
+      navigate('/service-provider/phone');
+    }
+  }, []);
+
+  const [fileUrls, setFileUrls] = useState<FileUrls>({
+    aadharCard: null,
+    drivingLicense: null,
+    panCard: null,
+  });
+
   const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
-    // phoneNo: "",
     address: "",
     password: "",
     mpin: "",
     aadharCard: null,
-    drivingLicense: null,
-    panCard: null,
-  });
+    panCard:  null,
+    drivingLicense: null
+    });
+
 
   const [showPassword, setShowPassword] = useState(false);
   const [showMpin, setShowMpin] = useState(false);
-  const [previewUrls, setPreviewUrls] = useState<{
-    aadharCard: string | null;
-    drivingLicense: string | null;
-    panCard: string | null;
-  }>({
-    aadharCard: null,
-    drivingLicense: null,
-    panCard: null,
-  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof typeof previewUrls) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof typeof formData) => {
     const file = e.target.files?.[0];
+    
     if (file) {
-      // setFormData((prev) => ({ ...prev, [field]: file }));
-      
-      // Create preview URL
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewUrls((prev) => ({ ...prev, [field]: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+      const imagePreview = URL.createObjectURL(file);
+
+    
+     setFileUrls((prev : any) => ({ ...prev, [field]: imagePreview }));
+
+      setFormData((prev : any) => ({...prev,  [field] : file }));
     }
   };
 
   const api = axios.create({
-    'baseURL' : 'http://13.202.163.238:4000/api'
+    'baseURL' : 'http://localhost:4000/api'
   })
+
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // const formDataToSend = new FormData();
-      // Object.entries(formData).forEach(([key, value]) => {
-      //   if (value !== null) {
-      //     formDataToSend.append(key, value);
-      //   }
-      // });
+
+    
       if(formData.mpin !== formData.password){
         alert("Mpin do not match");
         return;
       }
-      console.log(formData);
-      const response = await api.post("/add-provider", formData);
-      if (response?.status === 200) {
+
+      // Add phone number from context to the request
+      const dataToSend = {
+        ...formData,
+        phone: phoneNumber
+      };
+      console.log("dataToSend", dataToSend)
+
+      const response = await api.post("/add-provider", dataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }      
+      });
+      console.log("response", response)
+      if (response.status === 200) {
         alert("Provider added successfully");
-        // Reset form
+        setFileUrls({
+          aadharCard: null,
+          drivingLicense: null,
+          panCard: null,
+        });
         setFormData({
           name: "",
           email: "",
-          // phoneNo: "",
           password: "",
           mpin: "",
           address: "",
           aadharCard: null,
-          drivingLicense: null,
-          panCard: null,
+          panCard:  null,
+          drivingLicense: null
         });
-        setPreviewUrls({
-          aadharCard: null,
-          drivingLicense: null,
-          panCard: null,
-        });
+        navigate('/service-provider/view');
+        setPhoneNumber('');
       }
+
     } catch (error) {
       console.error("Error adding provider:", error);
       alert("Failed to add provider. Please try again.");
     }
   };
-
 
   return (
     <div className="flex h-screen bg-[#FFFFFF]">
@@ -175,7 +197,8 @@ const AddProvider: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                     MPIN (Optional)
                     <span className="text-gray-500 text-xs ml-2">For additional security</span>
-                  </label>                  <div className="relative">
+                  </label>              
+                  <div className="relative">
                     <input
                       type={showPassword ? "text" : "password"}
                       name="password"
@@ -237,18 +260,18 @@ const AddProvider: React.FC = () => {
                     >
                       Choose File
                     </label>
-                    {previewUrls.aadharCard && (
+                    {fileUrls?.aadharCard && (
                       <div className="relative w-24 h-24">
                         <img
-                          src={previewUrls.aadharCard}
+                          src={fileUrls.aadharCard}
                           alt="Aadhar Card Preview"
                           className="w-full h-full object-cover rounded-lg"
                         />
                         <button
                           type="button"
                           onClick={() => {
-                            setFormData(prev => ({ ...prev, aadharCard: null }));
-                            setPreviewUrls(prev => ({ ...prev, aadharCard: null }));
+                            setFormData(prev => ({ ...prev, aadharCard: null}));
+                            setFileUrls((prev : any) => ({ ...prev, aadharCard: null }))
                           }}
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                         >
@@ -279,18 +302,18 @@ const AddProvider: React.FC = () => {
                     >
                       Choose File
                     </label>
-                    {previewUrls.drivingLicense && (
+                    {fileUrls.drivingLicense && (
                       <div className="relative w-24 h-24">
                         <img
-                          src={previewUrls.drivingLicense}
+                          src={fileUrls.drivingLicense}
                           alt="Driving License Preview"
                           className="w-full h-full object-cover rounded-lg"
                         />
                         <button
                           type="button"
                           onClick={() => {
-                            setFormData(prev => ({ ...prev, drivingLicense: null }));
-                            setPreviewUrls(prev => ({ ...prev, drivingLicense: null }));
+                            setFormData(prev => ({ ...prev, drivingLicense: null}));
+                            setFileUrls((prev : any) => ({ ...prev, drivingLicense: null }))
                           }}
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                         >
@@ -318,18 +341,18 @@ const AddProvider: React.FC = () => {
                     >
                       Choose File
                     </label>
-                    {previewUrls.panCard && (
+                    {fileUrls?.panCard && (
                       <div className="relative w-24 h-24">
                         <img
-                          src={previewUrls.panCard}
+                          src={fileUrls.panCard}
                           alt="PAN Card Preview"
                           className="w-full h-full object-cover rounded-lg"
                         />
                         <button
                           type="button"
                           onClick={() => {
-                            setFormData(prev => ({ ...prev, panCard: null }));
-                            setPreviewUrls(prev => ({ ...prev, panCard: null }));
+                            setFormData(prev => ({ ...prev, panCard: null}));
+                            setFileUrls((prev : any) => ({ ...prev, panCard: null }))
                           }}
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                         >

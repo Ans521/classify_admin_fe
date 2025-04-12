@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Pencil, ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react';
+import { Pencil, ChevronLeft, ChevronRight, Search, Filter, X } from 'lucide-react';
 import Sidebar from '../../component/sidebar/sidebar';
 import Navbar from '../../component/navbar/navbar';
 import { Link, useParams } from 'react-router-dom';
@@ -22,9 +22,11 @@ const ViewProvider: React.FC = () => {
   const [providerList, setProviderList] = useState<ServiceProvider[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<ServiceProvider[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const {id} = useParams();
-  console.log("id", id);
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+  const [isEditOpen, setIsEditOpen] = useState<boolean>(false);
+  const [editingProviderId, setEditingProviderId] = useState<string | null>(null);
+
+
   // Mock data - replace with actual API call later
 
   // Filter providers based on search term
@@ -34,7 +36,7 @@ const ViewProvider: React.FC = () => {
       provider?.name?.toLowerCase().includes(searchTerm.toLowerCase())
     )
   });
-  
+
   // Pagination calculations
   const totalPages = Math.ceil(filteredProviders.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -44,7 +46,7 @@ const ViewProvider: React.FC = () => {
   // Update suggestions when search term changes
   useEffect(() => {
     if (searchTerm.length > 0) {
-      const filtered = providerList.filter(provider => 
+      const filtered = providerList?.filter(provider => 
         provider?.name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setSuggestions(filtered);
@@ -59,6 +61,16 @@ const ViewProvider: React.FC = () => {
     setCurrentPage(pageNumber);
   };
 
+  const handleEditClick = (providerId: string) => {
+    setEditingProviderId(providerId);
+    setIsEditOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditOpen(false);
+    setEditingProviderId(null);
+  };
+  
   const handleItemsPerPageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setItemsPerPage(Number(event.target.value));
     setCurrentPage(1);
@@ -85,7 +97,28 @@ const ViewProvider: React.FC = () => {
       setIsLoading(false);
     }
   }
-  
+  console.log("providerList", currentItems)
+  const handleStatusUpdate = async (providerId: string, status: string) => {
+    try {
+      console.log("providerId", providerId)
+      console.log("status", status)
+      const response = await api.put(`/update-provider-status/${providerId}`, { status }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log("response", response)
+      if (response.status === 200) {
+        alert("Provider status updated successfully");
+        handleViewDocument();
+      } else {
+        alert("Failed to update provider status");
+      }
+    } catch (error) {
+      console.error("Error updating provider status:", error);
+    }
+  }
+
   useEffect(() => {
     handleViewDocument();
   }, []);
@@ -122,7 +155,7 @@ const ViewProvider: React.FC = () => {
                     
                     {/* Suggestions Dropdown */}
                     {showSuggestions && suggestions.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg max-h-60 overflow-auto">
+                      <div className="absolute z-10 w-full bg-white rounded-lg shadow-lg max-h-60 overflow-auto">
                         {suggestions.map((provider, index) => (
                           <div
                             key={index}
@@ -152,7 +185,6 @@ const ViewProvider: React.FC = () => {
             {isLoading ? (
               <div className="flex flex-col items-center justify-center p-12">
                 <div className="relative">
-                  <div className="w-12 h-12 border-4 border-[#6362E7] border-t-transparent rounded-full animate-spin"></div>
                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                     <div className="w-6 h-6 border-2 border-[#6362E7] border-t-transparent rounded-full animate-spin"></div>
                   </div>
@@ -227,7 +259,58 @@ const ViewProvider: React.FC = () => {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <button className="p-2 bg-[#E8F8F3] text-[#38C677] rounded-full hover:bg-[#d1f3e9] transition-colors">
+                            {isEditOpen && editingProviderId === provider._id.toString() && (
+                              <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" onClick={closeEditModal}>
+                                <div className="bg-white p-8 rounded-xl w-[400px] shadow-xl" onClick={(e) => e.stopPropagation()}>
+                                  <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-2xl font-bold text-gray-800">Edit Provider</h2>
+                                    <button 
+                                      onClick={closeEditModal}
+                                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                                    >
+                                      <X size={24} />
+                                    </button>
+                                  </div>
+
+                                  <div className="flex flex-col space-y-6">
+                                    <div className='text-center'>
+                                      <h3 className="text-lg text-gray-700 font-medium">Edit Provider Verification</h3>
+                                    </div>
+
+                                    <div className='grid grid-cols-2 gap-4 px-4'>
+                                      <button className='px-4 py-3 bg-green-100 text-green-700 font-semibold rounded-lg hover:bg-green-600 hover:text-white transition-all duration-200' onClick={() => {handleEditClick(provider._id.toString())
+                                        setIsEditOpen(false)
+                                        handleStatusUpdate(provider._id.toString(), 'approved')
+                                      }}>
+                                        Approve
+                                      </button>
+                                      <button className='px-4 py-3 bg-red-100 text-red-700 font-semibold rounded-lg hover:bg-red-600 hover:text-white transition-all duration-200' onClick={() => {handleEditClick(provider._id.toString())
+                                        setIsEditOpen(false)
+                                        handleStatusUpdate(provider._id.toString(), 'rejected')
+                                      }}>
+                                        Reject
+                                      </button>
+                                      {/* <button className='px-4 py-3 bg-blue-100 text-blue-700 font-semibold rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-200'>
+                                        Edit
+                                      </button> */}
+                                    </div>
+
+                                    <div className="flex justify-center pt-4">
+                                      <button
+                                        onClick={closeEditModal}
+                                        className="px-8 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-all duration-200"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            <button 
+                              onClick={() => handleEditClick(provider._id.toString())} 
+                              className="p-2 bg-[#E8F8F3] text-[#38C677] rounded-full hover:bg-[#d1f3e9] transition-colors"
+                            >
                               <Pencil size={16} />
                             </button>
                           </td>
