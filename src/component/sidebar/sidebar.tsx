@@ -56,9 +56,9 @@ const Sidebar: React.FC = () => {
                   {isOpen && (
                     <div className="ml-8 mt-1 space-y-2">
                       <Link
-                        to="/service-provider/add"
+                        to="/service-provider/phone"
                         className={`block px-3 py-2 rounded-lg transition-all ${
-                          location.pathname === "/service-provider/add"
+                          location.pathname === "/service-provider/phone"
                             ? "bg-[#e3e9fe] text-[#6362E7]"
                             : "text-black hover:bg-[#dde2f6]"
                         }`}

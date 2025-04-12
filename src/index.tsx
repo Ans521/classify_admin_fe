@@ -6,10 +6,10 @@ import reportWebVitals from './reportWebVitals';
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import UserDocument from './component/userdocument/UserDocument';
 import { IdProvider } from './component/context';
-import { Sidebar } from 'lucide-react';
+import { Phone, Sidebar } from 'lucide-react';
 import AddProvider from './component/ProviderList/addProvider';
 import ViewProvider from './component/ProviderList/viewProviders';
-
+import PhoneVerification from './component/ProviderList/PhoneVerification';
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
@@ -18,6 +18,10 @@ const router = createBrowserRouter([
   {
     path : '/',
     element : <App/>
+  }, 
+  {
+    path: "/login",
+    // element: <loginPage />,
   },
   {
     path : "/document/:id",
@@ -32,9 +36,13 @@ const router = createBrowserRouter([
     element : <ViewProvider/>
   },
    {
-    path : "/service-provider/add",
+    path : "/service-provider/phone",
+    element : <PhoneVerification/>
+   },
+   {
+    path : "/service-provider/provider-add",
     element : <AddProvider/>
-   }, 
+   },
    {
     path : "/service-provider/view/:id",
     element : <UserDocument/>

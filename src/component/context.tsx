@@ -1,4 +1,4 @@
-import React, { createContext, useState, ReactNode, Dispatch, SetStateAction, useContext } from 'react';
+import React, { createContext, useState, ReactNode, Dispatch, SetStateAction, useContext, useEffect } from 'react';
 
 // initializing a new context
 
@@ -11,6 +11,8 @@ type IdContextType = {
     setIsOpen : Dispatch<SetStateAction<any |  null>>
     selectedDocument : any,
     setSelectedDocument : Dispatch<SetStateAction<any |  null>>
+    phoneNumber: string,
+    setPhoneNumber: Dispatch<SetStateAction<string>>
 }
 
 const IdContext = createContext<IdContextType | undefined>(undefined);
@@ -25,7 +27,20 @@ export const IdProvider: React.FC<IdProviderProps> = ({ children }) => {
     const [image, setImage] = useState<string[]>([])
     const [isOpen, setIsOpen] = useState<boolean>(false)
     const [selectedDocument, setSelectedDocument] = useState<number | null>(null)
-    return <IdContext.Provider value={{providerId, setProviderId, image, setImage, isOpen, setIsOpen, selectedDocument, setSelectedDocument}}>
+    const [phoneNumber, setPhoneNumber] = useState<string>('')
+
+    return <IdContext.Provider value={{
+        providerId,
+        setProviderId, 
+        image, 
+        setImage, 
+        isOpen,
+        setIsOpen, 
+        selectedDocument, 
+        setSelectedDocument,
+        phoneNumber,
+        setPhoneNumber
+    }}>
         {children}
     </IdContext.Provider>
 }
@@ -46,3 +61,5 @@ export const useIsOpen = () => useIdContext().isOpen;
 export const useSetIsOpen = () => useIdContext().setIsOpen;
 export const useSelectedDocument = () => useIdContext().selectedDocument;
 export const useSetSelectedDocument = () => useIdContext().setSelectedDocument;
+export const usePhoneNumber = () => useIdContext().phoneNumber;
+export const useSetPhoneNumber = () => useIdContext().setPhoneNumber;
