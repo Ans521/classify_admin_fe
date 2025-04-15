@@ -18,13 +18,13 @@ const UserDocument: React.FC = () => {
   const setImage = useSetImage();
   const [error, setError] = useState<string | null>(null);
 
-  const documents = ["Aadhar Card", "Pan Card", "Driving Licence"];
+  const documents = ["Aadhar Card", "Aadhar Card Back", "Pan Card", "Provider Photo"];
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading ] = useState<boolean>(true);
 
   const api = axios.create({
-    'baseURL' : 'http://13.202.163.238:4000/api'
+    'baseURL' : 'http://localhost:4000/api'
   });
 
   const handleViewDocument = async () => {
