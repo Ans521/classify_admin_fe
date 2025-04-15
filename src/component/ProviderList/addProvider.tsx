@@ -10,17 +10,20 @@ import { usePhoneNumber, useSetPhoneNumber } from '../context';
 interface FormData {
   name: string;
   email: string;
-  password: string;
-  mpin: string;
+  category: string;
+  subcategory: string;
   address: string;
+  aadharAddress: string;
   aadharCard: null,
+  aadharCardBack: null,
   panCard:  null,
-  drivingLicense: null;
+  photo: null;
 }
 
 interface FileUrls {
   aadharCard: any | null;
-  drivingLicense: any | null;
+  aadharCardBack: any | null;
+  photo: any | null;
   panCard: any | null;
 }
 
@@ -34,10 +37,24 @@ const AddProvider: React.FC = () => {
       navigate('/service-provider/phone');
     }
   }, []);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isSubcategoryOpen, setIsSubcategoryOpen] = useState<boolean>(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("select category");
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("select subcategory");
+
+  const options = ["plumber", "electrician", "carpenter", "painter", "other"];
+  const subcategoryOptions = {
+    plumber: ["pipe fitting", "bathroom installation", "water heater", "other"],
+    electrician: ["wiring", "panel installation", "lighting", "other"],
+    carpenter: ["furniture", "cabinets", "doors", "other"],
+    painter: ["interior", "exterior", "wallpaper", "other"],
+    other: ["other"]
+  };
 
   const [fileUrls, setFileUrls] = useState<FileUrls>({
     aadharCard: null,
-    drivingLicense: null,
+    aadharCardBack: null,
+    photo: null,
     panCard: null,
   });
 
@@ -45,16 +62,14 @@ const AddProvider: React.FC = () => {
     name: "",
     email: "",
     address: "",
-    password: "",
-    mpin: "",
+    aadharAddress: "",
+    category: "",
+    subcategory: "",
     aadharCard: null,
-    panCard:  null,
-    drivingLicense: null
-    });
-
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [showMpin, setShowMpin] = useState(false);
+    aadharCardBack: null,
+    panCard: null,
+    photo: null
+  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -66,16 +81,15 @@ const AddProvider: React.FC = () => {
     
     if (file) {
       const imagePreview = URL.createObjectURL(file);
-
-    
-     setFileUrls((prev : any) => ({ ...prev, [field]: imagePreview }));
+      console.log("imagePreview", imagePreview)
+      setFileUrls((prev : any) => ({ ...prev, [field]: imagePreview }));
 
       setFormData((prev : any) => ({...prev,  [field] : file }));
     }
   };
 
   const api = axios.create({
-    'baseURL' : 'http://13.202.163.238:4000/api'
+    'baseURL' : 'http://localhost:4000/api'
   })
 
   
@@ -83,13 +97,6 @@ const AddProvider: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-
-    
-      if(formData.mpin !== formData.password){
-        alert("Mpin do not match");
-        return;
-      }
-
       // Add phone number from context to the request
       const dataToSend = {
         ...formData,
@@ -107,18 +114,21 @@ const AddProvider: React.FC = () => {
         alert("Provider added successfully");
         setFileUrls({
           aadharCard: null,
-          drivingLicense: null,
+          aadharCardBack: null,
+          photo: null,
           panCard: null,
         });
         setFormData({
           name: "",
           email: "",
-          password: "",
-          mpin: "",
+          category: "",
+          subcategory: "",
           address: "",
+          aadharAddress: "",
           aadharCard: null,
+          aadharCardBack: null,
           panCard:  null,
-          drivingLicense: null
+          photo: null
         });
         navigate('/service-provider/view');
         setPhoneNumber('');
@@ -128,6 +138,19 @@ const AddProvider: React.FC = () => {
       console.error("Error adding provider:", error);
       alert("Failed to add provider. Please try again.");
     }
+  };
+
+  const handleCategorySelect = (option: string) => {
+    setSelectedCategory(option);
+    setFormData(prev => ({ ...prev, category: option, subcategory: "" }));
+    setSelectedSubcategory("select subcategory");
+    setIsOpen(false);
+  };
+
+  const handleSubcategorySelect = (option: string) => {
+    setSelectedSubcategory(option);
+    setFormData(prev => ({ ...prev, subcategory: option }));
+    setIsSubcategoryOpen(false);
   };
 
   return (
@@ -152,7 +175,7 @@ const AddProvider: React.FC = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent focus:outline-none"
                     required
                   />
                 </div>
@@ -164,9 +187,68 @@ const AddProvider: React.FC = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent focus:outline-none"
                     required
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsOpen(!isOpen)}
+                      className="inline-flex justify-between w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow focus:ring-2 focus:ring-[#6362E7] focus:border-transparent focus:outline-none"
+                    >
+                      {selectedCategory}
+                      <ChevronDown className="w-5 h-5 ml-2" />
+                    </button>
+                    {isOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                        {options.map((option, index) => (
+                          <div
+                            key={index}
+                            onClick={() => handleCategorySelect(option)}
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer focus:outline-none"
+                          >
+                            {option}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Subcategory
+                  </label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsSubcategoryOpen(!isSubcategoryOpen)}
+                      className="inline-flex justify-between w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow focus:ring-2 focus:ring-[#6362E7] focus:border-transparent focus:outline-none"
+                      disabled={!formData.category}
+                    >
+                      {selectedSubcategory}
+                      <ChevronDown className="w-5 h-5 ml-2" />
+                    </button>
+                    {isSubcategoryOpen && formData.category && (
+                      <div className="absolute z-40 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                        {subcategoryOptions[formData.category as keyof typeof subcategoryOptions]?.map((option, index) => (
+                          <div
+                            key={index}
+                            onClick={() => handleSubcategorySelect(option)}
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer focus:outline-none"
+                          >
+                            {option}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -175,77 +257,35 @@ const AddProvider: React.FC = () => {
                     name="address"
                     value={formData.address}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent focus:outline-none"
                     rows={3}
                     required
                   />
                 </div>
 
-                {/* <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                  <input
-                    type="tel"
-                    name="phoneNo"
-                    value={formData.phoneNo}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent"
-                    required
-                  />
-                </div> */}
-
-                <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                    MPIN (Optional)
-                    <span className="text-gray-500 text-xs ml-2">For additional security</span>
-                  </label>              
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
-                  </div>
-                </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    MPIN (Optional)
+                    AadharCard Address
+                    <span className="text-gray-500 text-xs ml-2">(Please enter the same address as mentioned in aadharCard)</span>
                   </label>
-                  <div className="relative">
-                    <input
-                      type={showMpin ? "text" : "password"}
-                      name="mpin"
-                      value={formData.mpin}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowMpin(!showMpin)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      {showMpin ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
-                  </div>
+                  <textarea
+                    name="aadharAddress"
+                    value={formData.aadharAddress}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent focus:outline-none"
+                    rows={3}
+                    required
+                  />
                 </div>
               </div>
 
               {/* Document Upload Fields */}
               <div className="space-y-6">
                 <h2 className="text-xl font-semibold text-gray-800">Document Uploads</h2>
-                
-                {/* Aadhar Card */}
+
+                {/* Aadhar Card Front */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Aadhar Card</label>
+                  <label className="block text-sm font-medium text-gray-700">Aadhar Card (Front)</label>
                   <div className="flex items-center space-x-4">
                     <input
                       type="file"
@@ -256,7 +296,7 @@ const AddProvider: React.FC = () => {
                     />
                     <label
                       htmlFor="aadharCard"
-                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors"
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors focus:outline-none"
                     >
                       Choose File
                     </label>
@@ -264,7 +304,7 @@ const AddProvider: React.FC = () => {
                       <div className="relative w-24 h-24">
                         <img
                           src={fileUrls.aadharCard}
-                          alt="Aadhar Card Preview"
+                          alt="Aadhar Card Front Preview"
                           className="w-full h-full object-cover rounded-lg"
                         />
                         <button
@@ -282,38 +322,77 @@ const AddProvider: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Driving License */}
+                {/* Aadhar Card Back */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Driving License (Optional)
-                    <span className="text-gray-500 text-xs ml-2">Upload if available</span>
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Aadhar Card (Back)</label>
                   <div className="flex items-center space-x-4">
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => handleFileChange(e, 'drivingLicense')}
+                      onChange={(e) => handleFileChange(e, 'aadharCardBack')}
                       className="hidden"
-                      id="drivingLicense"
+                      id="aadharCardBack"
                     />
                     <label
-                      htmlFor="drivingLicense"
-                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors"
+                      htmlFor="aadharCardBack"
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors focus:outline-none"
                     >
                       Choose File
                     </label>
-                    {fileUrls.drivingLicense && (
+                    {fileUrls?.aadharCardBack && (
                       <div className="relative w-24 h-24">
                         <img
-                          src={fileUrls.drivingLicense}
-                          alt="Driving License Preview"
+                          src={fileUrls.aadharCardBack}
+                          alt="Aadhar Card Back Preview"
                           className="w-full h-full object-cover rounded-lg"
                         />
                         <button
                           type="button"
                           onClick={() => {
-                            setFormData(prev => ({ ...prev, drivingLicense: null}));
-                            setFileUrls((prev : any) => ({ ...prev, drivingLicense: null }))
+                            setFormData(prev => ({ ...prev, aadharCardBack: null}));
+                            setFileUrls((prev : any) => ({ ...prev, aadharCardBack: null }))
+                          }}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Photo Upload */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Your Photo
+                    <span className="text-gray-500 text-xs ml-2">Upload your recent photograph</span>
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileChange(e, 'photo')}
+                      className="hidden"
+                      id="photo"
+                    />
+                    <label
+                      htmlFor="photo"
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors focus:outline-none"
+                    >
+                      Choose File
+                    </label>
+                    {fileUrls?.photo && (
+                      <div className="relative w-24 h-24">
+                        <img
+                          src={fileUrls.photo}
+                          alt="Photo Preview"
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, photo: null}));
+                            setFileUrls((prev : any) => ({ ...prev, photo: null }))
                           }}
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                         >
@@ -337,7 +416,7 @@ const AddProvider: React.FC = () => {
                     />
                     <label
                       htmlFor="panCard"
-                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors"
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors focus:outline-none"
                     >
                       Choose File
                     </label>
