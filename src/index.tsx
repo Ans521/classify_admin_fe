@@ -10,6 +10,8 @@ import { Phone, Sidebar } from 'lucide-react';
 import AddProvider from './component/ProviderList/addProvider';
 import ViewProvider from './component/ProviderList/viewProviders';
 import PhoneVerification from './component/ProviderList/PhoneVerification';
+import Category from './component/ProviderList/Category';
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
@@ -46,7 +48,11 @@ const router = createBrowserRouter([
    {
     path : "/service-provider/view/:id",
     element : <UserDocument/>
-   }  
+   },
+   {
+    path : "/category",
+    element : <Category/>
+   }
 ])
 
 root.render(

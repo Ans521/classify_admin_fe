@@ -27,6 +27,10 @@ interface FileUrls {
   panCard: any | null;
 }
 
+interface SubcategoryOptions {
+  [key : string] : string[]
+}
+
 const AddProvider: React.FC = () => {
   const navigate = useNavigate();
   const phoneNumber = usePhoneNumber();
@@ -42,14 +46,9 @@ const AddProvider: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("select category");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("select subcategory");
 
-  const options = ["plumber", "electrician", "carpenter", "painter", "other"];
-  const subcategoryOptions = {
-    plumber: ["pipe fitting", "bathroom installation", "water heater", "other"],
-    electrician: ["wiring", "panel installation", "lighting", "other"],
-    carpenter: ["furniture", "cabinets", "doors", "other"],
-    painter: ["interior", "exterior", "wallpaper", "other"],
-    other: ["other"]
-  };
+  const [options, setOptions] = useState<any[]>([]);
+  const [subcategoryOptions, setSubcategoryOptions] = useState<SubcategoryOptions>({});
+
 
   const [fileUrls, setFileUrls] = useState<FileUrls>({
     aadharCard: null,
@@ -92,7 +91,23 @@ const AddProvider: React.FC = () => {
     'baseURL' : 'http://localhost:4000/api'
   })
 
-  
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const {data} = await api.get('/get-all-category');
+      console.log("response", data.data)
+      setOptions(data?.data?.map((item : any) => item?.category))
+
+      const formatCategory : SubcategoryOptions = {}
+      data?.data?.forEach((item : any) => {
+        formatCategory[item?.category] = item?.subcategories
+      })
+      console.log("formatCategory", formatCategory)
+      setSubcategoryOptions(formatCategory)
+
+    };
+    fetchCategories();
+  }, []);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -237,7 +252,7 @@ const AddProvider: React.FC = () => {
                     </button>
                     {isSubcategoryOpen && formData.category && (
                       <div className="absolute z-40 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
-                        {subcategoryOptions[formData.category as keyof typeof subcategoryOptions]?.map((option, index) => (
+                        {subcategoryOptions[formData.category as keyof typeof subcategoryOptions]?.map((option :any , index :any) => (
                           <div
                             key={index}
                             onClick={() => handleSubcategorySelect(option)}
