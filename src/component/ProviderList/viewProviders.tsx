@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Pencil, ChevronLeft, ChevronRight, Search, Filter, X } from 'lucide-react';
+import { Pencil, ChevronLeft, ChevronRight, Search, Filter, X, Phone } from 'lucide-react';
 import Sidebar from '../../component/sidebar/sidebar';
 import Navbar from '../../component/navbar/navbar';
 import { Link, useParams } from 'react-router-dom';
@@ -8,8 +8,6 @@ import axios from 'axios';
 interface ServiceProvider {
   _id: number;
   name: string; 
-  providerImage: string;
-  coverImage: string;
   status: 'pending' | 'approved' | 'rejected';
   imageUrl: string[];
   phoneNo: string;
@@ -32,8 +30,9 @@ const ViewProvider: React.FC = () => {
   // Filter providers based on search term
   const filteredProviders = providerList?.filter((provider) => {
     return (
-      typeof provider?.name === 'string' &&
-      provider?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      (typeof provider?.name === 'string' ) &&
+      (provider?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      provider?.phoneNo?.toLowerCase().includes(searchTerm.toLowerCase()))
     )
   });
 
@@ -47,7 +46,8 @@ const ViewProvider: React.FC = () => {
   useEffect(() => {
     if (searchTerm.length > 0) {
       const filtered = providerList?.filter(provider => 
-        provider?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+        provider?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        provider?.phoneNo?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setSuggestions(filtered);
       setShowSuggestions(true);
@@ -86,6 +86,7 @@ const ViewProvider: React.FC = () => {
       const response = await api.get(`/get-provider-list`);
       if (Array.isArray(response.data?.data)) {
         setProviderList(response.data?.data);
+        console.log("providerList", response.data?.data);
       } else {
         console.error("Expected array of providers but got:", response.data?.data);
         setProviderList([]);
@@ -166,7 +167,7 @@ const ViewProvider: React.FC = () => {
                             }}
                           >
                             <span className="text-sm text-gray-800">{provider.name}</span>
-                            <span className="text-xs text-gray-500">{provider.phoneNo}</span>
+                            {/* <span className="text-xs text-gray-500">{provider.phoneNo}</span> */}
                           </div>
                         ))}
                       </div>
@@ -349,7 +350,7 @@ const ViewProvider: React.FC = () => {
                       >
                         <ChevronLeft size={20} />
                       </button>
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      {/* {Array.from({ length: totalPages }, (_, i) => i + 1).map((page : any) => (
                         <button
                           key={page}
                           onClick={() => handlePageChange(page)}
@@ -361,8 +362,11 @@ const ViewProvider: React.FC = () => {
                         >
                           {page}
                         </button>
-                      ))}
-                      <button
+                      ))} */}
+                <span className="px-5 py-2 bg-[#6362E7] text-white font-medium rounded-lg shadow-md hover:bg-[#4f4ee0] transition-colors duration-200 cursor-pointer">
+                  {currentPage}
+                </span>      
+                 <button
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={currentPage === totalPages}
                         className={`p-2 rounded-md ${
