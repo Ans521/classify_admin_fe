@@ -15,14 +15,12 @@ const Category: React.FC = () => {
   const [newCategory, setNewCategory] = useState<string>('');
   const [newSubcategories, setNewSubcategories] = useState<string[]>(['']);
   const [isOpen, setIsOpen] = useState<boolean>(false);
-
-  console.log("categories", typeof(categories));
-
+  const [uploadedFile, setUploadedFile] = useState<File[]>([]);
+  
   const api = axios.create({
-    baseURL: 'http://13.202.163.238:4000/api'
+    baseURL: 'http://localhost:4000/api'
   });
 
-console.log("categories", categories);
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
 
@@ -73,6 +71,18 @@ console.log("categories", categories);
     setNewSubcategories(updatedSubcategories);
   };
 
+  const handleFileChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    console.log("files", files);
+    if (files && files.length > 0) {
+      console.log("value", files[0]);
+      console.log("index", index);
+    } else {
+      console.log("No file selected");
+    }
+  }
+  
+
   const handleDeleteCategory = async (categoryId: string) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
       try {
@@ -116,10 +126,23 @@ console.log("categories", categories);
                         <input
                           type="text"
                           value={subcategory}
-                          onChange={(e) => handleSubcategoryChange(index, e.target.value)}
                           placeholder="Enter subcategory name"
+                          onChange={(e) => handleSubcategoryChange(index, e.target.value)}
                           className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent focus:outline-none"
                         />
+
+                        <input
+                        type='file'
+                        value={subcategory}
+                        accept='image/*'
+                        className='hidden'
+                        onChange={(e) => handleFileChange(index, e)}
+                        id={`subcat-file-${index}`}
+                        />
+                        <label htmlFor={`subcat-file-${index}`}
+                        className='flex p-x-2 items-center justify-center w-28 h-14 bg-slate-100 text-black rounded-lg cursor-pointer hover:bg-slate-200 hover:-translate-y-1 transition-all duration-300 ease-in-out'
+                        >Upload Image</label>
+
                         {index === newSubcategories.length - 1 ? (
                           <button
                             onClick={addSubcategoryField}
@@ -149,43 +172,6 @@ console.log("categories", categories);
               </div>
 
               {/* Categories List */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-700 mb-4">Categories</h2>
-                <div className="space-y-4">
-                  {categories && categories?.map((category: any) => (
-                    <div key={category?.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <h3 className="text-2xl font-medium ml-2 text-gray-800">Category : {category?.category}</h3>
-                          <button
-                            onClick={() => handleDeleteCategory(category?._id.toString())}
-                            className="flex items-center space-x-1 px-3 py-1.5 text-red-500 hover:bg-red-50 rounded-lg focus:outline-none transition-colors"
-                            title="Delete category"
-                          >
-                            <Trash2 size={16} />
-                            <span className="text-sm">Delete Category</span>  
-                          </button>
-                      </div>
-                      <div className="space-y-2">
-                        {category?.subcategories?.map((subcategory: any, index: any) => (
-                          <div key={index} className="flex  justify-between space-x-3 items-center pl-4">
-                            <div className="flex items-center space-x-3">
-                              <span className="text-gray-600">{index + 1}.</span>
-                              <span className="text-gray-600">{subcategory}</span>
-                            </div>
-                            {/* <button
-                            onClick={() => handleDeleteCategory(category?.id)}
-                            className="flex items-center space-x-1 px-3 py-1.5 text-red-500 hover:bg-red-50 rounded-lg focus:outline-none transition-colors"
-                            title="Delete category"
-                          >
-                            <X size={16} />
-                          </button> */}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         </div>

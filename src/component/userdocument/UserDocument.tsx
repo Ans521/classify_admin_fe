@@ -6,8 +6,14 @@ import axios from 'axios';
 interface Provider {
   _id: string;
   name: string;
-  imageUrl: string[];
+  imageUrl: ImageUrl;
   // Add other properties as needed
+}
+interface ImageUrl {
+  AC : string;
+  ACB : string;
+  PC : string;
+  PH : string;
 }
 
 const UserDocument: React.FC = () => {
@@ -24,7 +30,7 @@ const UserDocument: React.FC = () => {
   const [isLoading, setIsLoading ] = useState<boolean>(true);
 
   const api = axios.create({
-    'baseURL' : 'http://13.202.163.238:4000/api'
+    'baseURL' : 'http://localhost:4000/api'
   });
 
   const handleViewDocument = async () => {
@@ -34,7 +40,7 @@ const UserDocument: React.FC = () => {
       const response = await api.get(`/get-provider-list`);
       if (Array.isArray(response.data?.data)) {
         const provider = response.data?.data.find((p: Provider) => p._id === id);
-      
+        console.log("providerda", provider)
         if (provider?.imageUrl) {
           setImage(provider.imageUrl);
           setProviderId(provider?._id);
@@ -53,7 +59,7 @@ const UserDocument: React.FC = () => {
       setIsLoading(false);
     }
   };
-
+console.log("documentImages", documentImages)
   useEffect(() => {
     handleViewDocument();
   }, [id]);
@@ -178,13 +184,16 @@ const UserDocument: React.FC = () => {
                   >
                     <h2 className="text-xl font-semibold mb-2">{document}</h2>
                     <div className="w-full h-60 bg-gray-200 rounded-md mb-2 flex justify-center items-center">
-                      {documentImages.length > 0 && documentImages[index] ? (
-                          <img 
-                            src={documentImages[index]}
+                      {Object.values(documentImages).length > 0 ? (
+                        Object.values(documentImages).map((value : any, index : any) => (
+                          <img
+                            key={index}
+                            src={value}
                             alt={document}
-                            className="object-cover w-full h-full rounded-md"
+                            className="object-contain w-full h-full rounded-md"
+                            onClick={() => handleCardClick(index) }
                           />
-                      ) : (
+                        ))):(
                         <span className="text-gray-500">No image available</span>
                       )}
                     </div>
