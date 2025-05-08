@@ -15,8 +15,9 @@ const Category: React.FC = () => {
   const [newCategory, setNewCategory] = useState<string>('');
   const [newSubcategories, setNewSubcategories] = useState<string[]>(['']);
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [uploadedFile, setUploadedFile] = useState<File[]>([]);
-  
+  const [uploadedFile, setUploadedFile] = useState<boolean[]>([]);
+  const [uploadedFileUrl, setUploadedFileUrl] = useState<string[]>([]);
+
   const api = axios.create({
     baseURL: 'http://localhost:4000/api'
   });
@@ -26,26 +27,39 @@ const Category: React.FC = () => {
 
     try {
       const validSubcategories = newSubcategories.filter(sub => sub.trim());
+      if (validSubcategories.length === 0) {
+        alert('Please add at least one subcategory.');
+        return;
+      }
+      const subCategroiesWithImage = validSubcategories.map((subcategory, index) => {
+        return {
+          name: subcategory,
+          image: uploadedFileUrl[index] || null
+        };
+
+      })
+
       const response = await api.post('/categories', {
         category: newCategory,
-        subcategories: validSubcategories
+        subcategories: subCategroiesWithImage
       });
-
-
       if(response.status === 200){
         setNewCategory('');
         setNewSubcategories(['']);
+        setUploadedFile([false]);
+        setUploadedFileUrl([]);
         alert('Category added successfully');
       }
     } catch (error) {
       console.error('Error adding category:', error);
-      alert('Failed to add category');  
+      alert('Failed to add category or category already exists');  
     }
   };
 
   useEffect(() => {
     allCategories();
-  }, [newCategory, newSubcategories]);
+    console.log("uploadedFile", uploadedFile);
+  }, [newCategory, newSubcategories, uploadedFile]);
 
   const allCategories = async () => {
     try {
@@ -66,38 +80,62 @@ const Category: React.FC = () => {
     setNewSubcategories([...newSubcategories, '']);
   };
 
-  const removeSubcategoryField = ( index: number) => {
-    const updatedSubcategories = newSubcategories.filter((_, i) => i !== index);
-    setNewSubcategories(updatedSubcategories);
-  };
-
-  const handleFileChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    console.log("files", files);
     if (files && files.length > 0) {
-      console.log("value", files[0]);
-      console.log("index", index);
+      const formData = new FormData();
+      formData.append('image', files[0]);
+      const response : any = await api.post('/upload-image', formData, {
+        headers: {
+          'Content-Type' : 'multipart/form-data'
+        }
+      });
+      console.log("response", response);
+      if(response?.status === 200){
+        alert('File uploaded successfully');
+        console.log("File uploaded successfully:", response.data.data);
+        setUploadedFile((prev) => {
+          const updated = [...prev];
+          updated[index] = true;
+          return updated;
+      })
+      setUploadedFileUrl((prev) => {
+        const updated = [...prev];
+        updated[index] = response.data.data;
+        return updated;
+      })
+    }
+      console.log("File uploaded successfully:", response.data);
     } else {
       console.log("No file selected");
     }
   }
-  
 
-  const handleDeleteCategory = async (categoryId: string) => {
-    if (window.confirm('Are you sure you want to delete this category?')) {
-      try {
-        console.log("categoryId", categoryId);
-          const response = await api.delete(`/delete-category/${categoryId}`);
-        if (response.status === 200){
-          alert('Category deleted successfully');
-          allCategories();
+  const removeIndexAndFile = (index: number) => {
+    const updatedSubcategories = newSubcategories.filter((_, i) => i !== index);
+    setNewSubcategories(updatedSubcategories);
+    setUploadedFile((prev) => {
+      const updated = [...prev];
+      updated[index] = false;
+      return updated;      
+  })
+  }
+
+    const handleDeleteCategory = async (categoryId: string) => {
+      if (window.confirm('Are you sure you want to delete this category?')) {
+        try {
+          console.log("categoryId", categoryId);
+            const response = await api.delete(`/delete-category/${categoryId}`);
+          if (response.status === 200){
+            alert('Category deleted successfully');
+            allCategories();
+          }
+        } catch (error) {
+          console.error('Error deleting category:', error);
+          alert('Failed to delete category');
         }
-      } catch (error) {
-        console.error('Error deleting category:', error);
-        alert('Failed to delete category');
       }
-    }
-  };
+    };
 
   return (
     <div className="flex h-screen bg-[#FFFFFF]">
@@ -122,18 +160,17 @@ const Category: React.FC = () => {
                   />
                   <div className="space-y-2">
                     {newSubcategories?.map((subcategory, index)=> (
-                      <div key={index} className="flex gap-2">
+                      <div key={index} className="flex items-center gap-2">
                         <input
                           type="text"
                           value={subcategory}
+
                           placeholder="Enter subcategory name"
                           onChange={(e) => handleSubcategoryChange(index, e.target.value)}
                           className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent focus:outline-none"
                         />
-
                         <input
                         type='file'
-                        value={subcategory}
                         accept='image/*'
                         className='hidden'
                         onChange={(e) => handleFileChange(index, e)}
@@ -142,7 +179,13 @@ const Category: React.FC = () => {
                         <label htmlFor={`subcat-file-${index}`}
                         className='flex p-x-2 items-center justify-center w-28 h-14 bg-slate-100 text-black rounded-lg cursor-pointer hover:bg-slate-200 hover:-translate-y-1 transition-all duration-300 ease-in-out'
                         >Upload Image</label>
-
+                        {uploadedFile[index] &&  (
+                          <span className='text-green-500 text-center'>Uploaded</span>
+                        )}
+                        {!uploadedFile[index] && (
+                          <span className='text-red-500 text-center'>Not Uploaded</span>
+                        )}
+                        {/* Add a button to remove the subcategory field */}
                         {index === newSubcategories.length - 1 ? (
                           <button
                             onClick={addSubcategoryField}
@@ -152,7 +195,9 @@ const Category: React.FC = () => {
                           </button>
                         ) : (
                           <button
-                            onClick={() => removeSubcategoryField(index)}
+                            onClick={() => {
+                                removeIndexAndFile(index)
+                              }}
                             className="p-2 text-red-500 hover:bg-gray-100 rounded-lg focus:outline-none"
                           >
                             <X size={20} />
