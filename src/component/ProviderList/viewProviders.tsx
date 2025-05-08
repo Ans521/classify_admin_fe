@@ -77,7 +77,7 @@ const ViewProvider: React.FC = () => {
   };
 
   const api = axios.create({
-    'baseURL' : 'http://13.202.163.238:4000/api'
+    'baseURL' : 'http://localhost:4000/api'
   })
 
   const handleViewDocument = async () => {

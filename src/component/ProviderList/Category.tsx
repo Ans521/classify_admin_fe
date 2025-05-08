@@ -15,39 +15,51 @@ const Category: React.FC = () => {
   const [newCategory, setNewCategory] = useState<string>('');
   const [newSubcategories, setNewSubcategories] = useState<string[]>(['']);
   const [isOpen, setIsOpen] = useState<boolean>(false);
-
-  console.log("categories", typeof(categories));
+  const [uploadedFile, setUploadedFile] = useState<boolean[]>([]);
+  const [uploadedFileUrl, setUploadedFileUrl] = useState<string[]>([]);
 
   const api = axios.create({
-    baseURL: 'http://13.202.163.238:4000/api'
+    baseURL: 'http://localhost:4000/api'
   });
 
-console.log("categories", categories);
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
 
     try {
       const validSubcategories = newSubcategories.filter(sub => sub.trim());
+      if (validSubcategories.length === 0) {
+        alert('Please add at least one subcategory.');
+        return;
+      }
+      const subCategroiesWithImage = validSubcategories.map((subcategory, index) => {
+        return {
+          name: subcategory,
+          image: uploadedFileUrl[index] || null
+        };
+
+      })
+
       const response = await api.post('/categories', {
         category: newCategory,
-        subcategories: validSubcategories
+        subcategories: subCategroiesWithImage
       });
-
-
       if(response.status === 200){
         setNewCategory('');
         setNewSubcategories(['']);
+        setUploadedFile([false]);
+        setUploadedFileUrl([]);
         alert('Category added successfully');
       }
     } catch (error) {
       console.error('Error adding category:', error);
-      alert('Failed to add category');  
+      alert('Failed to add category or category already exists');  
     }
   };
 
   useEffect(() => {
     allCategories();
-  }, [newCategory, newSubcategories]);
+    console.log("uploadedFile", uploadedFile);
+  }, [newCategory, newSubcategories, uploadedFile]);
 
   const allCategories = async () => {
     try {
@@ -68,26 +80,62 @@ console.log("categories", categories);
     setNewSubcategories([...newSubcategories, '']);
   };
 
-  const removeSubcategoryField = ( index: number) => {
+  const handleFileChange = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const formData = new FormData();
+      formData.append('image', files[0]);
+      const response : any = await api.post('/upload-image', formData, {
+        headers: {
+          'Content-Type' : 'multipart/form-data'
+        }
+      });
+      console.log("response", response);
+      if(response?.status === 200){
+        alert('File uploaded successfully');
+        console.log("File uploaded successfully:", response.data.data);
+        setUploadedFile((prev) => {
+          const updated = [...prev];
+          updated[index] = true;
+          return updated;
+      })
+      setUploadedFileUrl((prev) => {
+        const updated = [...prev];
+        updated[index] = response.data.data;
+        return updated;
+      })
+    }
+      console.log("File uploaded successfully:", response.data);
+    } else {
+      console.log("No file selected");
+    }
+  }
+
+  const removeIndexAndFile = (index: number) => {
     const updatedSubcategories = newSubcategories.filter((_, i) => i !== index);
     setNewSubcategories(updatedSubcategories);
-  };
+    setUploadedFile((prev) => {
+      const updated = [...prev];
+      updated[index] = false;
+      return updated;      
+  })
+  }
 
-  const handleDeleteCategory = async (categoryId: string) => {
-    if (window.confirm('Are you sure you want to delete this category?')) {
-      try {
-        console.log("categoryId", categoryId);
-          const response = await api.delete(`/delete-category/${categoryId}`);
-        if (response.status === 200){
-          alert('Category deleted successfully');
-          allCategories();
+    const handleDeleteCategory = async (categoryId: string) => {
+      if (window.confirm('Are you sure you want to delete this category?')) {
+        try {
+          console.log("categoryId", categoryId);
+            const response = await api.delete(`/delete-category/${categoryId}`);
+          if (response.status === 200){
+            alert('Category deleted successfully');
+            allCategories();
+          }
+        } catch (error) {
+          console.error('Error deleting category:', error);
+          alert('Failed to delete category');
         }
-      } catch (error) {
-        console.error('Error deleting category:', error);
-        alert('Failed to delete category');
       }
-    }
-  };
+    };
 
   return (
     <div className="flex h-screen bg-[#FFFFFF]">
@@ -112,14 +160,32 @@ console.log("categories", categories);
                   />
                   <div className="space-y-2">
                     {newSubcategories?.map((subcategory, index)=> (
-                      <div key={index} className="flex gap-2">
+                      <div key={index} className="flex items-center gap-2">
                         <input
                           type="text"
                           value={subcategory}
-                          onChange={(e) => handleSubcategoryChange(index, e.target.value)}
+
                           placeholder="Enter subcategory name"
+                          onChange={(e) => handleSubcategoryChange(index, e.target.value)}
                           className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent focus:outline-none"
                         />
+                        <input
+                        type='file'
+                        accept='image/*'
+                        className='hidden'
+                        onChange={(e) => handleFileChange(index, e)}
+                        id={`subcat-file-${index}`}
+                        />
+                        <label htmlFor={`subcat-file-${index}`}
+                        className='flex p-x-2 items-center justify-center w-28 h-14 bg-slate-100 text-black rounded-lg cursor-pointer hover:bg-slate-200 hover:-translate-y-1 transition-all duration-300 ease-in-out'
+                        >Upload Image</label>
+                        {uploadedFile[index] &&  (
+                          <span className='text-green-500 text-center'>Uploaded</span>
+                        )}
+                        {!uploadedFile[index] && (
+                          <span className='text-red-500 text-center'>Not Uploaded</span>
+                        )}
+                        {/* Add a button to remove the subcategory field */}
                         {index === newSubcategories.length - 1 ? (
                           <button
                             onClick={addSubcategoryField}
@@ -129,7 +195,9 @@ console.log("categories", categories);
                           </button>
                         ) : (
                           <button
-                            onClick={() => removeSubcategoryField(index)}
+                            onClick={() => {
+                                removeIndexAndFile(index)
+                              }}
                             className="p-2 text-red-500 hover:bg-gray-100 rounded-lg focus:outline-none"
                           >
                             <X size={20} />
@@ -149,43 +217,6 @@ console.log("categories", categories);
               </div>
 
               {/* Categories List */}
-              <div>
-                <h2 className="text-lg font-semibold text-gray-700 mb-4">Categories</h2>
-                <div className="space-y-4">
-                  {categories && categories?.map((category: any) => (
-                    <div key={category?.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <h3 className="text-2xl font-medium ml-2 text-gray-800">Category : {category?.category}</h3>
-                          <button
-                            onClick={() => handleDeleteCategory(category?._id.toString())}
-                            className="flex items-center space-x-1 px-3 py-1.5 text-red-500 hover:bg-red-50 rounded-lg focus:outline-none transition-colors"
-                            title="Delete category"
-                          >
-                            <Trash2 size={16} />
-                            <span className="text-sm">Delete Category</span>  
-                          </button>
-                      </div>
-                      <div className="space-y-2">
-                        {category?.subcategories?.map((subcategory: any, index: any) => (
-                          <div key={index} className="flex  justify-between space-x-3 items-center pl-4">
-                            <div className="flex items-center space-x-3">
-                              <span className="text-gray-600">{index + 1}.</span>
-                              <span className="text-gray-600">{subcategory}</span>
-                            </div>
-                            {/* <button
-                            onClick={() => handleDeleteCategory(category?.id)}
-                            className="flex items-center space-x-1 px-3 py-1.5 text-red-500 hover:bg-red-50 rounded-lg focus:outline-none transition-colors"
-                            title="Delete category"
-                          >
-                            <X size={16} />
-                          </button> */}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         </div>

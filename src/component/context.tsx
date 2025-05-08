@@ -24,15 +24,15 @@ type IdProviderProps = {
 
 export const IdProvider: React.FC<IdProviderProps> = ({ children }) => {
     const [providerId, setProviderId] =  useState<string>('')
-    const [image, setImage] = useState<string[]>([])
+    const [image, setImage] = useState<any>({})
     const [isOpen, setIsOpen] = useState<boolean>(false)
     const [selectedDocument, setSelectedDocument] = useState<number | null>(null)
     const [phoneNumber, setPhoneNumber] = useState<string>('')
 
     return <IdContext.Provider value={{
         providerId,
-        setProviderId, 
-        image, 
+        setProviderId,
+        image,
         setImage, 
         isOpen,
         setIsOpen, 
