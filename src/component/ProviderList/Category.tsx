@@ -3,6 +3,8 @@ import { X, Plus, Trash2 } from 'lucide-react';
 import Sidebar from '../sidebar/sidebar';
 import Navbar from '../navbar/navbar';
 import axios from 'axios';
+import { spawn } from 'child_process';
+import { format } from 'path';
  
 interface Category {
   id?: string;
@@ -17,7 +19,7 @@ const Category: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [uploadedFile, setUploadedFile] = useState<boolean[]>([]);
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string[]>([]);
-  const [checkedItems, setCheckedItems] = useState<{[key : string]: boolean}>({});
+  const [checkedItems, setCheckedItems] = useState<any[]>([]);
  
   const api = axios.create({
     baseURL: 'http://localhost:4000/api'
@@ -63,9 +65,9 @@ const Category: React.FC = () => {
   useEffect(() => {
     allCategories();
     console.log("categories", categories)
-    console.log("uploadedFile", uploadedFile);
+    console.log("uploadedFileUrl", uploadedFileUrl);
     console.log("checked", checkedItems)
-  }, [newCategory, newSubcategories, uploadedFile]);
+  }, [uploadedFileUrl, newSubcategories, uploadedFile, checkedItems]);
  
  
   const allCategories = async () => {
@@ -92,11 +94,18 @@ const Category: React.FC = () => {
     if (files && files.length > 0) {
       const formData = new FormData();
       formData.append('image', files[0]);
-      const response: any = await api.post('/upload-image', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
+      // const response: any = await api.post('/upload-image', formData, {
+      //   headers: {
+      //     'Content-Type': 'multipart/form-data'
+      //   }
+      // });
+      const response = {
+        status : 200,
+        data : {
+          data : "http://localhost:4000/api/uploads/1684817899-1.png"
         }
-      });
+      }
+     
       if (response?.status === 200) {
         alert('File uploaded successfully');
         console.log("File uploaded successfully:", response.data.data);
@@ -143,15 +152,44 @@ const Category: React.FC = () => {
     }
   };
  
-  const handleChecked = (subcatId : string) => {
-      setCheckedItems((prev) => ({
-        ...prev,
-        [subcatId] : !(prev[subcatId] ?? false)
-      }))
+  const handleChecked = (idx : number, subcatId : string) => {
+      setCheckedItems((prev) => {
+        const checkedOne = [...prev];
+        if(checkedOne[idx] === subcatId){
+          checkedOne[idx] = undefined
+        }else{
+          checkedOne[idx] = subcatId
+        }
+        return checkedOne;
+      })
   }
  
-  const handleUploadIcon = () => {
-    
+  // const handleGetSpecialCategory = async () => {
+  //   try {
+  //     const { data } = await api.get('/get-special-category');
+  //   }
+  // }
+  const handleUploadIcon = async () => {
+      try {
+        const responseToAppend = checkedItems.map((item, index) => {
+          return{
+            iconImage : uploadedFileUrl[index],
+            subcategoryId : item,
+            speicialCategory : true
+          }
+        }).filter((item) => item?.iconImage !== undefined && item?.subcategoryId !== undefined)
+ 
+        const response = await api.post('/add-special-subcat', {
+          data : responseToAppend
+        });
+        if(response.status === 200){
+          alert('Special subcategory addedsuccessfully');
+          setCheckedItems([])
+        }
+      } catch (error) {
+          console.error('Error :', error);
+          alert('Failed to upload icon');
+      }
   }
   return (
     <div className="flex h-screen bg-[#FFFFFF]">
@@ -229,8 +267,8 @@ const Category: React.FC = () => {
                   >
                     Add Category
                   </button>
-
-
+ 
+ 
                 </div>
               </div>
  
@@ -278,37 +316,39 @@ const Category: React.FC = () => {
             <div className="bg-gray-600 text-white mt-4 p-4 border border-gray-700 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold text-white mb-4">All Subcategories (Unified List)</h2>
                 <ul className="space-y-2">
-                  {categories?.flatMap((category : any) => category.subcategories || []).map((subcategory: any, idx: number) => (
+                  {categories?.flatMap((category : any, idx: any) => category.subcategories || []).map((subcategory: any, idx: number) => (
                     <li key={subcategory._id || idx} className="flex items-center justify-between space-x-3 p-3">
                       <div className="flex items-center space-x-3">
                       <input type="checkbox" className="form-checkbox text-blue-500 mr-3 w-6 h-6 bg-gray-700 border-gray-500"
-                      checked={checkedItems[subcategory._id] ??  false}
-                      onChange={() => handleChecked(subcategory._id)}
+                      checked={checkedItems[idx] ? true :  false}
+                      onChange={() => handleChecked(idx, subcategory._id)}
                       />
                       <span className="text-white text-lg">{subcategory.name}</span>
                       </div>
-                      {checkedItems[subcategory._id] && (
+                       {checkedItems[idx] && (
                       <div className='flex'>
                         <input
                         type='file'
                         accept='image/*'
                         className='hidden'
-                        onChange={(e) => handleFileChange(subcategory._id, e)}
+                        onChange={(e) => handleFileChange(idx, e)}
                         id={`subcat-file-${subcategory._id}`}
                       />
-                      <label htmlFor={`subcat-file-${subcategory._id}`}
-                        className='flex text-bold items-center justify-center w-24 h-10 bg-slate-100 text-black rounded-lg cursor-pointer hover:bg-slate-200 hover:-translate-y-1 transition-all duration-300 ease-in-out'
-                      >Upload Icon</label>
+                      {!uploadedFile[idx] && (
+                        <label htmlFor={`subcat-file-${subcategory._id}`}
+                          className='flex text-bold items-center justify-center w-24 h-10 bg-slate-100 text-black rounded-lg cursor-pointer hover:bg-slate-200 hover:-translate-y-1 transition-all duration-300 ease-in-out mr-2'
+                        >Upload Icon</label>
+                      )}
+                       {uploadedFileUrl[idx] && <h1 className="bg-green-50 inline-flex items-center text-green-600 text-lg font-medium mr-2 px-2.5 py-0.5 rounded">Uploaded</h1>}
                       </div>
                       )}
                     </li>
                   ))}
                 </ul>
-
               <button className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50" onClick={handleUploadIcon}>
                 Save Changes
               </button>
-
+ 
             </div>
           </div>
         </div>
@@ -318,4 +358,5 @@ const Category: React.FC = () => {
 };
  
 export default Category;
+ 
  
