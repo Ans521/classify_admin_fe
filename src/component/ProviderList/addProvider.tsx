@@ -79,7 +79,7 @@ const AddProvider: React.FC = () => {
     const file = e.target.files?.[0];
     
     if (file) {
-      const imagePreview = URL.createObjectURL(file);
+        const imagePreview = URL.createObjectURL(file);
       console.log("imagePreview", imagePreview)
       setFileUrls((prev : any) => ({ ...prev, [field]: imagePreview }));
 
@@ -88,7 +88,7 @@ const AddProvider: React.FC = () => {
   };
 
   const api = axios.create({
-    'baseURL' : 'http://localhost:4000/api'
+    'baseURL' : 'http://13.202.163.238:4000/api'
   })
 
   useEffect(() => {

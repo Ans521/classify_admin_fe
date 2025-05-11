@@ -24,7 +24,7 @@ const Category: React.FC = () => {
   const [checkedItems, setCheckedItems] = useState<{ [key: string]: boolean }[]>([]);
 
   const api = axios.create({
-    baseURL: 'http://localhost:4000/api'
+    baseURL: 'http://13.202.163.238:4000/api'
   });
 
   const handleAddCategory = async () => {
