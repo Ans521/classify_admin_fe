@@ -31,7 +31,7 @@ const Category: React.FC = () => {
   const [subCatId, setSubCatId] = useState<string[]>([]);
 
   const api = axios.create({
-    baseURL: 'http://localhost:4000/api'
+    baseURL: 'http://13.202.163.238:4000/api'
   });
 
   const handleAddCategory = async () => {
@@ -49,6 +49,8 @@ const Category: React.FC = () => {
       console.log("validSubcategories", validSubcategories);
       console.log("subCatId", subCatId);
       console.log(isEditMode, "isEditMode");
+      console.log("uploadedFileUrl", uploadedFileUrl);
+
       if(!isEditMode){
         const subCategroiesWithImage = validSubcategories.map((subcategory, index) => {
           return {
@@ -120,9 +122,6 @@ const Category: React.FC = () => {
   }
   useEffect(() => {
     allCategories();
-    console.log("uploadedFileUrl", uploadedFileUrl);
-    console.log("imageUrl", imageUrl);
-
   }, [uploadedFileUrl, newSubcategories,newCategory, uploadedFile, checkedItems, iconFileUrl]);
 
   const allCategories = async () => {
@@ -177,6 +176,7 @@ const Category: React.FC = () => {
             return updated;
           })
         } else {
+          console.log("subcategory in handle file change", subcategory);
           setIconFileUrl((prev) => {
             const updated : any = [...prev];
             const subcatId = subcategory._id.toString();
@@ -188,14 +188,15 @@ const Category: React.FC = () => {
             }
             return updated;
           })
-          console.log("File uploaded successfully:", response.data);
         }
       }
     } else {
       console.log("No file selected");
     }
   }
-
+useEffect(() => {
+  console.log("Updated iconFileUrl:", iconFileUrl);
+}, [iconFileUrl]);
   const removeIndexAndFile = (index: number) => {
     const updatedSubcategories = newSubcategories.filter((_, i) => i !== index);
     setNewSubcategories(updatedSubcategories);
@@ -215,6 +216,7 @@ const Category: React.FC = () => {
     if (window.confirm('Are you sure you want to delete this category?')) {
       try {
         console.log("categoryId", categoryId);
+
         const response = await api.delete(`/delete-category/${categoryId}`);
         if (response.status === 200) {
           alert('Category deleted successfully');
@@ -252,10 +254,12 @@ const Category: React.FC = () => {
       })
   }
   useEffect(() => { 
-    console.log("imageUrl", imageUrl);
-    console.log("uploadedfileurl", uploadedFileUrl);
     handleGetSpecialCategory();
-  }, [imageUrl, uploadedFile, imageUrl]);
+  }, [imageUrl]);
+
+  useEffect(() => {
+    console.log("checkedItems", checkedItems);
+  }, [checkedItems]);
 
   const handleGetSpecialCategory = async () => {
     try {
@@ -330,6 +334,35 @@ const Category: React.FC = () => {
     }
   }
 
+  const handleUnChecked = async (index : number, subcatId : string) => {
+    try{
+      console.log("subcatId", subcatId);
+      setCheckedItems((prev) => {
+          const checkedOne : any = [...prev];
+
+          const isChecked = checkedOne.findIndex((item : any) => Object.keys(item)[0] === subcatId)
+          if(isChecked > -1){
+            checkedOne.splice(isChecked, 1);
+          }
+          return checkedOne;
+      })
+
+      const response : any = await api.put('/update-icon-special-subcat', {
+        subcategoryId: subcatId,
+        specialCategory: false
+      })
+
+      console.log("response", response);
+      if (response.status === 200) {
+        alert('Special Subcategory removed successfully');
+      }else{
+        alert('Failed to remove special subcategory');
+      }
+    }catch (error) {
+      alert('Failed to remove special subcategory');
+      console.error('Error unchecking item:', error);
+    }
+  }
   return (
     <div className="flex h-screen bg-[#FFFFFF]">
       <Sidebar />
@@ -450,6 +483,7 @@ const Category: React.FC = () => {
                             <button
                             className="flex items-center space-x-1 px-3 py-1.5 text-red-500 hover:bg-red-50 rounded-lg focus:outline-none transition-colors"
                             title="Delete category"
+                            onClick={() => handleDeleteCategory(subcategory._id?.toString())}
                           >
                             <X size={16} />
                           </button>
@@ -492,10 +526,12 @@ const Category: React.FC = () => {
                       {matchedIcon && matchedIcon[subcategory._id.toString()] &&
                       <>
                         <h1 className="bg-green-50 inline-flex items-center text-green-600 text-lg font-medium mr-2 px-2.5 py-0.5 rounded h-10 w-24">Uploaded</h1>
-                      
                         <img src={matchedIcon[subcategory._id.toString()]} className='w-16 h-10 rounded-lg mr-2 object-cover object-center border border-gray-500 cursor-pointer'
                         onClick={() => handleImageClick(matchedIcon[subcategory?._id.toString()] ?? '')}
-                        alt=''/>
+                        alt=''/> 
+                        <button className='bg-transparent rounded-lg p-1 hover:bg-red-100 transition-all duration-300 ease-in-out ml-2' onClick={() => handleUnChecked(idx, subcategory?._id.toString())}>
+                          <X size={20} className='text-red-500'/>
+                        </button>
                       </>
                       }
                     </div>
@@ -503,7 +539,7 @@ const Category: React.FC = () => {
                     {isOpen && openedUrl && (
                       <div className="fixed inset-0 flex items-center justify-center">
                         <div className="fixed inset-0 bg-black opacity-10" onClick={() => setIsOpen(false)}></div>
-                        <div className="absolute w-1/2 h-96 bg-white rounded-lg shadow-lg" onClick={(e) => e.stopPropagation()}>
+                          <div className="absolute w-1/2 h-96 bg-white rounded-lg shadow-lg" onClick={(e) => e.stopPropagation()}>
                             <img src={openedUrl} className="w-full h-full object-contain p-4 z-20" alt=''/>
                             <button
                               className="absolute bg-red-400 rounded-full p-1 -top-2 -right-2 hover:bg-red-600"
@@ -521,7 +557,6 @@ const Category: React.FC = () => {
               <button className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50" onClick={handleAddIconImage}>
                 Save Changes
               </button>
-
             </div>
           </div>
         </div>

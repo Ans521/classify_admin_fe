@@ -11,6 +11,7 @@ import AddProvider from './component/ProviderList/addProvider';
 import ViewProvider from './component/ProviderList/viewProviders';
 import PhoneVerification from './component/ProviderList/PhoneVerification';
 import Category from './component/ProviderList/Category';
+import BannerCategory from './component/ProviderList/banner';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -52,6 +53,10 @@ const router = createBrowserRouter([
    {
     path : "/category",
     element : <Category/>
+   },
+   {
+    path : 'banner',
+    element : <BannerCategory/>
    }
 ])
 
