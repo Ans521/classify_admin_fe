@@ -30,7 +30,7 @@ const UserDocument: React.FC = () => {
   const [isLoading, setIsLoading ] = useState<boolean>(true);
 
   const api = axios.create({
-    'baseURL' : 'http://82.180.144.143:4000/api'
+    'baseURL' : 'http://13.202.163.238:4000/api'
   });
 
   const handleViewDocument = async () => {
