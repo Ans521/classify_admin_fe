@@ -31,7 +31,7 @@ const Category: React.FC = () => {
   const [subCatId, setSubCatId] = useState<string[]>([]);
 
   const api = axios.create({
-    baseURL: 'http://82.180.144.143:4000/api'
+    baseURL: 'http://13.202.163.238:4000/api'
   });
 
   const handleAddCategory = async () => {
@@ -374,7 +374,7 @@ useEffect(() => {
               <h1 className="text-2xl font-bold text-gray-800 mb-6">Category Management</h1>
               {/* Add Category Section */}
               <div className="mb-8">
-                <h2 className="text-lg font-semibold text-gray-700 mb-4">{newCategory ? 'Edit Category' : 'Add New Category'}</h2>
+                <h2 className="text-lg font-semibold text-gray-700 mb-4">{newCategory ? 'Add New Category' : 'Edit Category'}</h2>
                 <div className="space-y-4">
                   <input
                     type="text"
