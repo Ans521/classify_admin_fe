@@ -17,7 +17,7 @@ const BannerCategory: React.FC = () => {
     const [image, setImage] = useState<any>([]);
 
     const api = axios.create({
-    baseURL: 'http://182.180.144.143:4000/api'
+    baseURL: 'http://82.180.144.143:4000/api'
     });
 
     const handleFileChange = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {        const file = e.target.files?.[0] || null;
