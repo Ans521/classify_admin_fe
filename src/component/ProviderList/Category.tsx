@@ -31,7 +31,7 @@ const Category: React.FC = () => {
   const [subCatId, setSubCatId] = useState<string[]>([]);
 
   const api = axios.create({
-    baseURL: 'http://182.180.144.143:4000/api'
+    baseURL: 'http://82.180.144.143:4000/api'
   });
 
   const handleAddCategory = async () => {
@@ -148,11 +148,13 @@ const Category: React.FC = () => {
     if (files && files.length > 0) {
       const formData = new FormData();
       formData.append('image', files[0]);
+      console.log("formdata", formData)
       const response: any = await api.post('/upload-image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
+      console.log("reponse", response)  
 
       if (response?.status === 200) {
         alert('File uploaded successfully');
