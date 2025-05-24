@@ -31,11 +31,9 @@ const ViewProvider: React.FC = () => {
   const filteredProviders = providerList?.filter((provider) => {
     return (
       (typeof provider?.name === 'string' ) &&
-      (provider?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      provider?.phoneNo?.toLowerCase().includes(searchTerm.toLowerCase()))
-    )
-  });
-
+      provider?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  )});
+  
   // Pagination calculations
   const totalPages = Math.ceil(filteredProviders.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -46,9 +44,7 @@ const ViewProvider: React.FC = () => {
   useEffect(() => {
     if (searchTerm.length > 0) {
       const filtered = providerList?.filter(provider => 
-        provider?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        provider?.phoneNo?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+        provider?.name?.toLowerCase().includes(searchTerm.toLowerCase()));
       setSuggestions(filtered);
       setShowSuggestions(true);
     } else {
