@@ -8,8 +8,8 @@ import axios from 'axios';
 const BannerCategory: React.FC = () => {
     const [banners, setBanners] = useState<{
         file: File | null;
-    imageUrl: string | null;
-    link: string;
+        imageUrl: string | null;
+        link: string;
     }[]>([
         { file: null, imageUrl: null, link: '' },
     ]);
@@ -17,7 +17,7 @@ const BannerCategory: React.FC = () => {
     const [image, setImage] = useState<any>([]);
 
     const api = axios.create({
-    baseURL: 'http://82.180.144.143:4000/api'
+    baseURL: 'http://localhost:4000/api'
     });
 
     const handleFileChange = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {        const file = e.target.files?.[0] || null;
@@ -33,9 +33,6 @@ const BannerCategory: React.FC = () => {
                 'Content-Type': 'multipart/form-data'
                 }
             });
-
-        console.log("response", data.data);
-
         
         newBanners[index].imageUrl = data.data ? data.data: null;
         setBanners(newBanners);
@@ -48,9 +45,9 @@ const BannerCategory: React.FC = () => {
     setBanners(newBanners);
   };
 
-  const addNewBanner = () => {
-    setBanners([...banners, { file: null, imageUrl: null, link: '' }]);
-  };
+    const addNewBanner = () => {
+      setBanners([...banners, { file: null, imageUrl: null, link: '' }]);
+    };
 
     const removeImage = (idx: number) => {
         setBanners(banners.filter((_, index) => index !== idx));
@@ -60,12 +57,30 @@ const BannerCategory: React.FC = () => {
         console.log(banners);
     }, [banners]);
 
+    const handleUploadBanners = async () => {
+      try{
+        const banner = banners.map((banner : any) => {
+          return {
+            imageUrl : banner.imageUrl,
+            link : banner.link
+          }
+        })
+        const response : any = await api.post('/add-banner', {data : banner})
+
+        if(response.status === 200){
+          alert("Banners added successfully");
+          setBanners([{ file: null, imageUrl: null, link: '' }]);
+        }
+      }catch(error){
+        console.log(error);
+     }
+    }
   return (
-    <div className="flex min-h-full w-full bg-[#FFFFFF]">
+    <div className="flex h-screen w-full bg-[#FFFFFF]">
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-scroll min-h-full w-full">
+      <div className="flex-1 flex flex-col overflow-y-auto h-full w-full">
         <Navbar />
-        <div className="p-10 space-y-8 overflow-scroll h-screen">
+        <div className="p-10 space-y-8">
           {banners.map((banner, index) => (
             <div key={index} className="flex flex-col gap-4">
                 <div className='flex gap-4'>
@@ -117,12 +132,21 @@ const BannerCategory: React.FC = () => {
             </button> */}
 
             <button
+              onClick={handleUploadBanners}
               className="bg-purple-600 w-full mb-10 text-white px-4 py-2 rounded-xl hover:bg-purple-700 hover:shadow-lg transition duration-300 ease-in-out hover:rotate-[1deg]"
             >
               Upload Banners
             </button>
-          </div>
+          </div>    
         </div>
+        <div className="flex items-center gap-4 px-8 mb-10">
+            <img
+              src="https://images.unsplash.com/photo-1520342868574-5fa3804e551c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80"
+              alt="Ansh Sharma"
+              className="w-60 h-60 rounded-lg"
+            />
+            <input type="text" placeholder="hello" className="w-full h-10 border px-3 rounded" />
+          </div>
       </div>
     </div>
   )
