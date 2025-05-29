@@ -8,16 +8,18 @@ import axios from 'axios';
 const BannerCategory: React.FC = () => {
     const [banners, setBanners] = useState<{
         file: File | null;
-    imageUrl: string | null;
-    link: string;
+        imageUrl: string | null;
+        link: string;
     }[]>([
         { file: null, imageUrl: null, link: '' },
     ]);
 
-    const [image, setImage] = useState<any>([]);
+    const [existingBanner, setExistingBanner] = useState<any[]>([]);
+
+    const [bannerList, setBannerList] = useState<any[]>([]);
 
     const api = axios.create({
-    baseURL: 'http://82.180.144.143:4000/api'
+    baseURL: 'http://localhost:4000/api'
     });
 
     const handleFileChange = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {        const file = e.target.files?.[0] || null;
@@ -33,39 +35,75 @@ const BannerCategory: React.FC = () => {
                 'Content-Type': 'multipart/form-data'
                 }
             });
-
-        console.log("response", data.data);
-
-        
         newBanners[index].imageUrl = data.data ? data.data: null;
         setBanners(newBanners);
         }
     }
 
-  const handleLinkChange = (index: number, value: string) => {
-    const newBanners = [...banners];
-    newBanners[index].link = value;
-    setBanners(newBanners);
-  };
+    const handleLinkChange = (index: number, value: string) => {
+      const newBanners = [...banners];
+      newBanners[index].link = value;
+      setBanners(newBanners);
+    };
 
-  const addNewBanner = () => {
-    setBanners([...banners, { file: null, imageUrl: null, link: '' }]);
-  };
+    const addNewBanner = () => {
+      setBanners([...banners, { file: null, imageUrl: null, link: '' }]);
+    };
 
     const removeImage = (idx: number) => {
         setBanners(banners.filter((_, index) => index !== idx));
     };
 
     useEffect(() => {
-        console.log(banners);
-    }, [banners]);
+        getBanners();
+    }, []);
 
+    const handleUploadBanners = async () => {
+      try{
+        const banner = banners.map((banner : any) => {
+          return {
+            imageUrl : banner.imageUrl,
+            link : banner.link
+          }
+        })
+        const response : any = await api.post('/add-banner', {data : banner})
+
+        if(response.status === 200){
+          alert("Banners added successfully");
+          setBanners([{ file: null, imageUrl: null, link: '' }]);
+        }
+      }catch(error){
+        console.log(error);
+     }
+    }
+
+    const getBanners = async () => {
+      try{
+        const response : any = await api.get('/get-all-banner');
+        console.log("response", response.data.data);
+        if(response.status === 200){
+          setBannerList(response.data.data);
+        }
+      }catch(error){
+        console.log(error);
+      }
+    }
+  
+    const handleBannerChange = (index : any, e : any) => {
+      console.log("index", index)
+      console.log("e.target.value", e.target.value)
+      // const newBanners = [...existingBanner];
+      // existingBanner.index = {
+      //   imageUrl : e.target.value,
+      //   // link : existingBanner[index].link
+      // }
+    }
   return (
-    <div className="flex min-h-full w-full bg-[#FFFFFF]">
+    <div className="flex h-screen w-full bg-[#FFFFFF]">
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-scroll min-h-full w-full">
+      <div className="flex-1 flex flex-col overflow-y-auto h-full w-full">
         <Navbar />
-        <div className="p-10 space-y-8 overflow-scroll h-screen">
+        <div className="p-10 space-y-8">
           {banners.map((banner, index) => (
             <div key={index} className="flex flex-col gap-4">
                 <div className='flex gap-4'>
@@ -117,14 +155,36 @@ const BannerCategory: React.FC = () => {
             </button> */}
 
             <button
+              onClick={handleUploadBanners}
               className="bg-purple-600 w-full mb-10 text-white px-4 py-2 rounded-xl hover:bg-purple-700 hover:shadow-lg transition duration-300 ease-in-out hover:rotate-[1deg]"
             >
               Upload Banners
             </button>
-          </div>
+          </div>    
+        </div>
+        <div className='grid grid-cols-2 gap-4'>
+            {bannerList.map((banner : any, index) => {
+              return (
+              <div key={banner._id} className="flex items-center gap-4 px-8 mb-10">
+              <img
+                src={banner.imageUrl}
+                className="w-96 h-20 rounded-lg"
+                alt='banner'
+                onChange={(e) => handleBannerChange(index, e.target)}
+              />
+              <input 
+                  type="text"
+                  placeholder="your uploaded link"
+                  value={banner.link}
+                  onChange={(e) => handleBannerChange(index, e.target.value)}
+                  className="w-full h-10 border px-3 rounded focus:outline-none focus:ring-0" />
+            </div>
+              )
+            })}
+            {/* <button className='bg-purple-600 w-full ml-10 mb-10 text-white px-4 py-2 rounded-xl hover:bg-purple-700 hover:shadow-lg transition duration-300 ease-in-out hover:rotate-[1deg]'>Save Changes</button> */}
+            </div>
         </div>
       </div>
-    </div>
   )
 
 };
