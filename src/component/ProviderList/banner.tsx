@@ -14,7 +14,9 @@ const BannerCategory: React.FC = () => {
         { file: null, imageUrl: null, link: '' },
     ]);
 
-    const [image, setImage] = useState<any>([]);
+    const [existingBanner, setExistingBanner] = useState<any[]>([]);
+
+    const [bannerList, setBannerList] = useState<any[]>([]);
 
     const api = axios.create({
     baseURL: 'http://localhost:4000/api'
@@ -33,17 +35,16 @@ const BannerCategory: React.FC = () => {
                 'Content-Type': 'multipart/form-data'
                 }
             });
-        
         newBanners[index].imageUrl = data.data ? data.data: null;
         setBanners(newBanners);
         }
     }
 
-  const handleLinkChange = (index: number, value: string) => {
-    const newBanners = [...banners];
-    newBanners[index].link = value;
-    setBanners(newBanners);
-  };
+    const handleLinkChange = (index: number, value: string) => {
+      const newBanners = [...banners];
+      newBanners[index].link = value;
+      setBanners(newBanners);
+    };
 
     const addNewBanner = () => {
       setBanners([...banners, { file: null, imageUrl: null, link: '' }]);
@@ -54,8 +55,8 @@ const BannerCategory: React.FC = () => {
     };
 
     useEffect(() => {
-        console.log(banners);
-    }, [banners]);
+        getBanners();
+    }, []);
 
     const handleUploadBanners = async () => {
       try{
@@ -74,6 +75,28 @@ const BannerCategory: React.FC = () => {
       }catch(error){
         console.log(error);
      }
+    }
+
+    const getBanners = async () => {
+      try{
+        const response : any = await api.get('/get-all-banner');
+        console.log("response", response.data.data);
+        if(response.status === 200){
+          setBannerList(response.data.data);
+        }
+      }catch(error){
+        console.log(error);
+      }
+    }
+  
+    const handleBannerChange = (index : any, e : any) => {
+      console.log("index", index)
+      console.log("e.target.value", e.target.value)
+      // const newBanners = [...existingBanner];
+      // existingBanner.index = {
+      //   imageUrl : e.target.value,
+      //   // link : existingBanner[index].link
+      // }
     }
   return (
     <div className="flex h-screen w-full bg-[#FFFFFF]">
@@ -139,16 +162,29 @@ const BannerCategory: React.FC = () => {
             </button>
           </div>    
         </div>
-        <div className="flex items-center gap-4 px-8 mb-10">
-            <img
-              src="https://images.unsplash.com/photo-1520342868574-5fa3804e551c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80"
-              alt="Ansh Sharma"
-              className="w-60 h-60 rounded-lg"
-            />
-            <input type="text" placeholder="hello" className="w-full h-10 border px-3 rounded" />
-          </div>
+        <div className='grid grid-cols-2 gap-4'>
+            {bannerList.map((banner : any, index) => {
+              return (
+              <div key={banner._id} className="flex items-center gap-4 px-8 mb-10">
+              <img
+                src={banner.imageUrl}
+                className="w-96 h-20 rounded-lg"
+                alt='banner'
+                onChange={(e) => handleBannerChange(index, e.target)}
+              />
+              <input 
+                  type="text"
+                  placeholder="your uploaded link"
+                  value={banner.link}
+                  onChange={(e) => handleBannerChange(index, e.target.value)}
+                  className="w-full h-10 border px-3 rounded focus:outline-none focus:ring-0" />
+            </div>
+              )
+            })}
+            {/* <button className='bg-purple-600 w-full ml-10 mb-10 text-white px-4 py-2 rounded-xl hover:bg-purple-700 hover:shadow-lg transition duration-300 ease-in-out hover:rotate-[1deg]'>Save Changes</button> */}
+            </div>
+        </div>
       </div>
-    </div>
   )
 
 };
