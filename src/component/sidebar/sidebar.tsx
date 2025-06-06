@@ -17,13 +17,11 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
-  console.log(location.pathname);
   return (
     <div className="w-[22%] bg-white text-black shadow-lg flex flex-col h-screen">
-      {/* Sidebar Logo (Fixed at Top) */}
+      
       <div className="px-5 mt-5 text-2xl font-semibold">Clasify</div>
-
-      {/* Sidebar Navigation (Scrollable) */}
+      
       <div className="overflow-y-auto flex-1 mt-4">
         <nav className="p-4 flex flex-col space-y-4">
           {[
