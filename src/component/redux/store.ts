@@ -1,8 +1,18 @@
 import { configureStore } from '@reduxjs/toolkit';
+import providerIdReducer from './providerIdSlice';
+import imageReducer from './imageSlice';
+import registerReducer from './register';
+import { api } from './api';
 
 export const store = configureStore({
     reducer : {
-
+        providerId : providerIdReducer,
+        image : imageReducer,
+        register : registerReducer,
+        [api.reducerPath] : api.reducer,
+    },
+    middleware: (getDefaultMiddleware) => {
+        return getDefaultMiddleware().concat(api.middleware);
     }
 })
 
@@ -14,4 +24,4 @@ export const store = configureStore({
 // dispatch is a function that sends actions to the Redux store to update the state.
 
 export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = ReturnType<typeof store.dispatch>;
+export type AppDispatch = typeof store.dispatch;

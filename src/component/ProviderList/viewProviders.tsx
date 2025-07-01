@@ -73,7 +73,7 @@ const ViewProvider: React.FC = () => {
   };
 
   const api = axios.create({
-    'baseURL' : 'http://82.180.144.143:4000/api'
+    'baseURL' : 'http://localhost:4000/api'
   })
 
   const handleViewDocument = async () => {
@@ -82,7 +82,6 @@ const ViewProvider: React.FC = () => {
       const response = await api.get(`/get-provider-list`);
       if (Array.isArray(response.data?.data)) {
         setProviderList(response.data?.data);
-        console.log("providerList", response.data?.data);
       } else {
         console.error("Expected array of providers but got:", response.data?.data);
         setProviderList([]);
@@ -94,11 +93,8 @@ const ViewProvider: React.FC = () => {
       setIsLoading(false);
     }
   }
-  console.log("providerList", currentItems)
   const handleStatusUpdate = async (providerId: string, status: string) => {
     try {
-      console.log("providerId", providerId)
-      console.log("status", status)
       const response = await api.put(`/update-provider-status/${providerId}`, { status }, {
         headers: {
           'Content-Type': 'application/json'

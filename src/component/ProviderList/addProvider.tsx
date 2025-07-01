@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, Eye, EyeOff, X } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 import Sidebar from '../sidebar/sidebar';
 import Navbar from '../navbar/navbar';
-import axios from 'axios';
 // import { FaProjectDiagram } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
-import { usePhoneNumber, useSetPhoneNumber } from '../context';
-
+import { useAddProviderMutation , useGetAllCategoryQuery } from '../redux/api';
+import { useAppSelector } from '../redux/hook';
+import { useAppDispatch } from '../redux/hook';
 interface FormData {
   name: string;
-  email: string;
   category: string;
   subcategory: string;
   address: string;
@@ -32,34 +31,34 @@ interface SubcategoryOptions {
 }
 
 const AddProvider: React.FC = () => {
+  const [addProvider] = useAddProviderMutation();
   const navigate = useNavigate();
-  const phoneNumber = usePhoneNumber();
-  const setPhoneNumber = useSetPhoneNumber();
+  const dispatch = useAppDispatch();
+
+  const phoneNumber = useAppSelector((state : any) => state.register.phoneNumber);
   useEffect(() => {
     // If no phone number in context, redirect to phone verification
     if (!phoneNumber) {
       navigate('/service-provider/phone');
     }
   }, []);
+
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isSubcategoryOpen, setIsSubcategoryOpen] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("select category");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("select subcategory");
 
   const [options, setOptions] = useState<any[]>([]);
-  const [subcategoryOptions, setSubcategoryOptions] = useState<SubcategoryOptions>({});
-
-
+  const [subcategoryOptions, setSubcategoryOptions] = useState([]);
   const [fileUrls, setFileUrls] = useState<FileUrls>({
     aadharCard: null,
     aadharCardBack: null,
     photo: null,
     panCard: null,
   });
-
+  
   const [formData, setFormData] = useState<FormData>({
     name: "",
-    email: "",
     address: "",
     aadharAddress: "",
     category: "",
@@ -80,35 +79,31 @@ const AddProvider: React.FC = () => {
     
     if (file) {
         const imagePreview = URL.createObjectURL(file);
-      console.log("imagePreview", imagePreview)
       setFileUrls((prev : any) => ({ ...prev, [field]: imagePreview }));
 
       setFormData((prev : any) => ({...prev,  [field] : file }));
     }
   };
 
-  const api = axios.create({
-    'baseURL' : 'http://82.180.144.143:4000/api'
-  })
-
+  const {data, error, isLoading} =  useGetAllCategoryQuery(undefined);
   useEffect(() => {
-    const fetchCategories = async () => {
-      const {data} = await api.get('/get-all-category');
-      console.log("response", data.data)
-      setOptions(data?.data?.map((item : any) => item?.category))
+    if(data){
+      // Assuming data is structured as { category: [...], subcategories: [...] }
+      setOptions((data as any)?.category.map((item : any) => item?.category));
+      const subcatOptions = (data as any).data?.filter((item : any) => item.category === selectedCategory);
 
-      const formatCategory : SubcategoryOptions = {}
-      data?.data?.forEach((item : any) => {
-        formatCategory[item?.category] = item?.subcategories
-      })
-      console.log("formatCategory", formatCategory)
-      setSubcategoryOptions(formatCategory)
+      setSubcategoryOptions(subcatOptions?.length > 0 ? subcatOptions[0]?.subcategories : []);
+    }
+    if (error) {
+      console.error("Error fetching categories:", error);
+      alert("Failed to fetch categories. Please try again.");
+    }
+    if (isLoading) {
+      console.log("Loading categories...");
+    }
+  }, [data, error, selectedCategory]);
 
-    };
-    fetchCategories();
-  }, []);
-
-
+  console.log("subcategoryOptions", subcategoryOptions);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -119,35 +114,32 @@ const AddProvider: React.FC = () => {
       };
       console.log("dataToSend", dataToSend)
 
-      const response = await api.post("/add-provider", dataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }      
-      });
-      console.log("response", response)
-      if (response.status === 200) {
-        alert("Provider added successfully");
-        setFileUrls({
-          aadharCard: null,
-          aadharCardBack: null,
-          photo: null,
-          panCard: null,
-        });
-        setFormData({
-          name: "",
-          email: "",
-          category: "",
-          subcategory: "",
-          address: "",
-          aadharAddress: "",
-          aadharCard: null,
-          aadharCardBack: null,
-          panCard:  null,
-          photo: null
-        });
-        navigate('/service-provider/view');
-        setPhoneNumber('');
-      }
+      const response = await addProvider(dataToSend).unwrap();
+
+      console.log("response come", response)
+      // if (response.status === 200) {
+      //   alert("Provider added successfully");
+      //   setFileUrls({
+      //     aadharCard: null,
+      //     aadharCardBack: null,
+      //     photo: null,
+      //     panCard: null,
+      //   });
+      //   setFormData({
+      //     name: "",
+      //     email: "",
+      //     category: "",
+      //     subcategory: "",
+      //     address: "",
+      //     aadharAddress: "",
+      //     aadharCard: null,
+      //     aadharCardBack: null,
+      //     panCard:  null,
+      //     photo: null
+      //   });  
+      //    navigate('/service-provider/view');
+      //    dispatch(setPhoneNumber(''));
+      //  }
 
     } catch (error) {
       console.error("Error adding provider:", error);
@@ -168,6 +160,7 @@ const AddProvider: React.FC = () => {
     setIsSubcategoryOpen(false);
   };
 
+  console.log("formData category", formData.category);
   return (
     <div className="flex h-screen bg-[#FFFFFF]">
       <Sidebar />
@@ -179,8 +172,8 @@ const AddProvider: React.FC = () => {
               <h1 className="text-3xl font-bold text-gray-800 mb-2 text-center">Add New Provider</h1>
               <p className="text-gray-600 text-center">Fill in the details to register a new service provider</p>
             </div>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
+     
+            <form className="space-y-6" onSubmit={handleSubmit}>
               {/* Existing form fields */}
               <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
                 <div>
@@ -189,18 +182,6 @@ const AddProvider: React.FC = () => {
                     type="text"
                     name="name"
                     value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent focus:outline-none"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent focus:outline-none"
                     required
@@ -250,15 +231,15 @@ const AddProvider: React.FC = () => {
                       {selectedSubcategory}
                       <ChevronDown className="w-5 h-5 ml-2" />
                     </button>
-                    {isSubcategoryOpen && formData.category && (
-                      <div className="absolute z-40 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
-                        {subcategoryOptions[formData.category as keyof typeof subcategoryOptions]?.map((option :any , index :any) => (
+                    {isSubcategoryOpen  && (
+                      <div className="absolute w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                        {subcategoryOptions?.map((option :any , index :any) => (
                           <div
                             key={index}
                             onClick={() => handleSubcategorySelect(option)}
                             className="px-4 py-2 hover:bg-gray-100 cursor-pointer focus:outline-none"
                           >
-                            {option}
+                            {option.name}
                           </div>
                         ))}
                       </div>

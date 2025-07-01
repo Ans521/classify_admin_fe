@@ -6,12 +6,15 @@ import reportWebVitals from './reportWebVitals';
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import UserDocument from './component/userdocument/UserDocument';
 import { IdProvider } from './component/context';
-import { Phone, Sidebar } from 'lucide-react';
+import { Sidebar } from 'lucide-react';
+import { Provider as ReduxProvider } from 'react-redux';
+import { store } from './component/redux/store';
 import AddProvider from './component/ProviderList/addProvider';
 import ViewProvider from './component/ProviderList/viewProviders';
 import PhoneVerification from './component/ProviderList/PhoneVerification';
 import Category from './component/ProviderList/Category';
 import BannerCategory from './component/ProviderList/banner';
+import ProviderOffers from './component/offers/ProviderOffers';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -38,33 +41,39 @@ const router = createBrowserRouter([
     path : "/service-provider/view",
     element : <ViewProvider/>
   },
-   {
-    path : "/service-provider/phone",
-    element : <PhoneVerification/>
-   },
-   {
+  {
+  path : "/service-provider/phone",
+  element : <PhoneVerification/>
+  },
+  {
     path : "/service-provider/provider-add",
     element : <AddProvider/>
-   },
-   {
+  },
+  {
     path : "/service-provider/view/:id",
     element : <UserDocument/>
-   },
-   {
+  },
+  {
     path : "/category",
     element : <Category/>
-   },
-   {
-    path : 'banner',
+  },
+  {
+    path : '/banner',
     element : <BannerCategory/>
-   }
+  },
+  {
+    path : '/offers',
+    element : <ProviderOffers/>
+  }
 ])
 
 root.render(
   <React.StrictMode>
+    <ReduxProvider store={store}>
     <IdProvider>
       <RouterProvider router={router}/>
     </IdProvider>
+    </ReduxProvider>
   </React.StrictMode>
 );
 
