@@ -1,7 +1,10 @@
 import React, {useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useProviderId, useImage, useSetImage, useSetProviderId } from "../context";
+import { useProviderId } from "../context";
 import axios from 'axios';
+import { useSelector, useDispatch } from "react-redux";
+import { setProviderId } from "../redux/providerIdSlice";
+import { setImage } from "../redux/imageSlice";
 
 interface Provider {
   _id: string;
@@ -17,20 +20,26 @@ interface ImageUrl {
 }
 
 const UserDocument: React.FC = () => {
-  const providerId = useProviderId();
-  const setProviderId = useSetProviderId();
+  const providerIdFromRedux = useSelector((state : any ) => state.providerId.providerId)
+  const dispatch = useDispatch();
   const { id } : any = useParams();
-  const documentImages = useImage();
-  const setImage = useSetImage();
+  const documentImages = useSelector((state: any) => state.image.image);
+  console.log("documentimages", documentImages)
   const [error, setError] = useState<string | null>(null);
-
   const documents = ["Aadhar Card", "Aadhar Card Back", "Pan Card", "Provider Photo"];
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading ] = useState<boolean>(true);
 
+  enum DocumentType {
+  'Aadhar Card' = 'AC',
+  'Aadhar Card Back' ='ACB',
+  'Pan Card' = "PC",
+  'Provider Photo' = "PH"
+  }
+  console.log("enum", Object.entries(DocumentType))
   const api = axios.create({
-    'baseURL' : 'http://82.180.144.143:4000/api'
+    'baseURL' : 'http://localhost:4000/api'
   });
 
   const handleViewDocument = async () => {
@@ -40,91 +49,41 @@ const UserDocument: React.FC = () => {
       const response = await api.get(`/get-provider-list`);
       if (Array.isArray(response.data?.data)) {
         const provider = response.data?.data.find((p: Provider) => p._id === id);
-        console.log("providerda", provider)
         if (provider?.imageUrl) {
-          setImage(provider.imageUrl);
-          setProviderId(provider?._id);
+          dispatch(setImage(provider.imageUrl));
+          dispatch(setProviderId(provider?._id));
         } else {
-          setImage([]);
+          dispatch(setImage([])); // setImage([]);
         }
       } else {
         console.error("Expected array of providers but got:", response.data?.data);
-        setImage([]);
+        dispatch(setImage([]));
       }
     } catch (error) {
       console.error("Error fetching provider list:", error);
       setError("Failed to load documents. Please try again later.");
-      setImage([]);
+      dispatch(setImage([])); // setImage([]);
     } finally {
       setIsLoading(false);
     }
   };
-console.log("documentImages", documentImages)
   useEffect(() => {
     handleViewDocument();
   }, [id]);
 
-  const handleCardClick = (index: number) => {
-    setSelectedCard(index);
+  const handleCardClick = (key: any) => {
+    setSelectedCard(key);
     setIsModalOpen(true);
   };
 
 
   const closeModal = () => setIsModalOpen(false);
 
-  // const updateLocalStorage = (key: string, data: number[]) => {
-  //   localStorage.setItem(`${key}_${provideId}`, JSON.stringify(data));
-  // };
-
-  // const handleAction = (action: "approve" | "reject") => {
-  //   if (selectedCard !== null) {
-  //     const cardId = provideId + selectedCard;
-  //     if (
-  //       !approvedCards.includes(cardId) &&
-  //       !rejectedCards.includes(cardId)
-  //     ) {
-  //       const updatedList = action === 'approve' ? [...approvedCards, cardId] : [...rejectedCards, cardId]
-  //       action === "approve"
-  //         ? setApprovedCards(updatedList)
-  //         : setRejectedCards(updatedList);
-
-  //       updateLocalStorage(
-  //         action === "approve" ? "approvedCards" : "rejectedCards",
-  //         updatedList
-  //       );
-  //     }
-  //   }
-  //   closeModal();
-  // };
-
-  // const getStatusLabel = (index: number) => {
-  //   const cardId = provideId + index;
-  //   if (approvedCards.includes(cardId)) {
-  //     return (
-  //       <div className="absolute top-2 right-4 bg-green-500 text-white text-sm px-2 py-1 rounded">
-  //         Approved
-  //       </div>
-  //     );
-  //   } else if (rejectedCards.includes(cardId)) {
-  //     return (
-  //       <div className="absolute top-2 right-4 bg-red-500 text-white text-sm px-2 py-1 rounded">
-  //         Rejected
-  //       </div>
-  //     );
-  //   } else {
-  //     return (
-  //       <div className="absolute top-2 right-4 bg-yellow-500 text-white text-sm px-2 py-1 rounded">
-  //         Pending
-  //       </div>
-  //     );
-  //   }
-  // };
-
   const handleStatus = async (action: 'approve' | 'reject') => {
     try {
       const status : any = action === 'approve' ? true : false;
       const { data } : any = await api.post('/update-status', {
-        providerId,
+        providerIdFromRedux,
         status,
       });
 
@@ -136,7 +95,6 @@ console.log("documentImages", documentImages)
     }
   };
 
-  // console.log()
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -163,7 +121,7 @@ console.log("documentImages", documentImages)
       </div>
     );
   }
-
+  console.log("documentImages object", Object.values(documentImages))
   return (
     <div className="flex h-screen bg-white">
       <div className="flex-1 overflow-y-auto">
@@ -176,30 +134,33 @@ console.log("documentImages", documentImages)
               </div>
             ) : (
               <div className="space-y-6">
-                {documents.map((document, index) => (
-                  <div
-                    key={index}
-                    className="bg-white p-4 rounded-lg shadow-lg relative cursor-pointer"
-                    onClick={() => handleCardClick(index)}
-                  >
-                    <h2 className="text-xl font-semibold mb-2">{document}</h2>
-                    <div className="w-full h-60 bg-gray-200 rounded-md mb-2 flex justify-center items-center">
-                      {Object.values(documentImages).length > 0 ? (
-                        Object.values(documentImages).map((value : any, index : any) => (
+                {documents.map((document, index) => {
+                  const key = DocumentType[document as keyof typeof DocumentType];
+                  const image = documentImages[key]
+                  console.log("key")
+                  console.log("image", image)
+                  return (
+                    <div
+                      key={index}
+                      className="bg-white p-4 rounded-lg shadow-lg relative cursor-pointer"
+                      onClick={() => handleCardClick(key)}
+                    >
+                      <h2 className="text-xl font-semibold mb-2">{document}</h2>
+                      <div className="w-full h-60 bg-gray-200 rounded-md mb-2 flex justify-center items-center">
+                        {image ? (
                           <img
-                            key={index}
-                            src={value}
+                            src={image}
                             alt={document}
-                            className="object-contain w-full h-full rounded-md"
-                            onClick={() => handleCardClick(index) }
+                            className="w-full h-full object-cover rounded-md"
                           />
-                        ))):(
-                        <span className="text-gray-500">No image available</span>
-                      )}
+                        ):(
+                          <span className="text-gray-500">No image available</span>
+                        )}
+                      </div>
+                      <p className="p-2 text-center text-sm text-gray-600">{document}</p>
                     </div>
-                    <p className="p-2 text-center text-sm text-gray-600">{document}</p>
-                  </div>
-                ))}
+                      )
+                })}
               </div>
             )}
 
@@ -229,7 +190,7 @@ console.log("documentImages", documentImages)
           onClick={closeModal}
         >
           <div
-            className="w-[65%] bg-white p-7 rounded-lg"
+            className="w-[65%] relative bg-white p-7 rounded-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-center">
@@ -242,6 +203,25 @@ console.log("documentImages", documentImages)
               alt="Selected Document"
               className="object-contain w-full h-96 rounded-md"
             />
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+              onClick={closeModal}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
           </div>
         </div>
       )}

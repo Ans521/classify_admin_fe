@@ -12,23 +12,23 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import path from "path";
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
-  console.log(location.pathname);
   return (
     <div className="w-[22%] bg-white text-black shadow-lg flex flex-col h-screen">
-      {/* Sidebar Logo (Fixed at Top) */}
+      
       <div className="px-5 mt-5 text-2xl font-semibold">Clasify</div>
-
-      {/* Sidebar Navigation (Scrollable) */}
+      
       <div className="overflow-y-auto flex-1 mt-4">
         <nav className="p-4 flex flex-col space-y-4">
           {[
             { name: "Dashboard", path: "/", icon: <LayoutDashboard size={20} /> },
             { name: "Banner", path: "/banner", icon: <Image size={20} /> },
+            {name : "Offers", path : "/offers", icon : <Tag size={20}/>},
             { name: "Category", path: "/category", icon: <List size={20} /> },
             { name: "Service Zone", path: "/service-zone", icon: <Map size={20} /> },
             { name: "Payment Method", path: "/payment-method", icon: <CreditCard size={20} /> },
