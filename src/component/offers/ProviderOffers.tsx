@@ -27,7 +27,7 @@ const ProviderOffers: React.FC = () => {
 
   useEffect(() => {
     getBanners();
-  }, []);
+  }, [banners]);
 
   useEffect(() => {
     console.log("bannerList", bannerList);
@@ -73,9 +73,14 @@ const ProviderOffers: React.FC = () => {
         price: b.price,
         validity: b.validity,
       }));
+      let updatePayload;
 
+      if(isEditMode){
+        updatePayload = payload[0];
+      }
+      console.log("editOfferId", editOfferId);
       const response : any = isEditMode
-        ? await api.patch('/update-offer', { data: payload }, {params  : {id : editOfferId}})
+        ? await api.patch('/update-offer', { data: updatePayload }, {params  : {id : editOfferId}})
         : await api.post('/add-offer', { data: payload });
 
       if (response.status === 200) {
@@ -115,11 +120,11 @@ const ProviderOffers: React.FC = () => {
 
   const removeBanner = async (id: string) => {
     try {
-      const res: any = await api.delete('/delete-banner?id=' + id);
+      const res: any = await api.delete('/delete-offer', { params: { id } });
       if (res.status === 200) {
         alert('Banner deleted');
         setIsEditMode(false);
-        getBanners();
+        setBannerList((prev) => prev.filter((banner) => banner._id !== id))
       }
     } catch (err) {
       console.error(err);
@@ -203,7 +208,7 @@ const ProviderOffers: React.FC = () => {
         <div className="grid grid-cols-2 gap-6 p-6">
           {bannerList.map((banner: any) => (
             <div key={banner._id} className="border p-4 rounded-lg shadow-sm space-y-4 bg-white">
-              <img src={banner.imageUrl} alt="banner" className="w-full h-24 object-cover rounded" />
+              <img src={banner.imageUrl} alt="banner" className="w-full h-80 object-contain rounded" />
               <div>Price: ₹{banner.price}</div>
               <div>Valid for: {banner.validity} month(s)</div>
               {banner.link && <div className="text-blue-500">Link: {banner.link}</div>}
