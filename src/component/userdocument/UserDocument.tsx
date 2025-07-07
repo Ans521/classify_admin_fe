@@ -39,7 +39,7 @@ const UserDocument: React.FC = () => {
   }
   console.log("enum", Object.entries(DocumentType))
   const api = axios.create({
-    'baseURL' : 'http://localhost:4000/api'
+    'baseURL' : 'http://82.180.144.143:4000/api'
   });
 
   const handleViewDocument = async () => {

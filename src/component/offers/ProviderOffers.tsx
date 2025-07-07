@@ -22,7 +22,7 @@ const ProviderOffers: React.FC = () => {
 
   
   const api = axios.create({
-    baseURL: 'http://localhost:4000/api',
+    baseURL: 'http://82.180.144.143:4000/api',
   });
 
   useEffect(() => {
@@ -145,7 +145,7 @@ const ProviderOffers: React.FC = () => {
                   {banner.imageUrl ? (
                     <img src={banner.imageUrl} alt="preview" className="w-full h-full object-contain rounded" />
                   ) : (
-                    <span>Upload Banner</span>
+                    <span>Upload Offer</span>
                   )}
                 </label>
                 {!isEditMode && (
@@ -192,7 +192,7 @@ const ProviderOffers: React.FC = () => {
               onClick={addNewBanner}
               className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
             >
-              <Plus size={18} /> Add Banner
+              <Plus size={18} /> Add Offer
             </button>
           )}
 
@@ -200,7 +200,7 @@ const ProviderOffers: React.FC = () => {
             onClick={() => handleUploadBanners()}
             className="bg-blue-600 text-white w-full py-2 mt-6 rounded-xl hover:bg-blue-700"
           >
-            {isEditMode ? 'Update Banner' : 'Upload Banner'}
+            {isEditMode ? 'Update Offer' : 'Upload Offer'}
           </button>
         </div>
 
