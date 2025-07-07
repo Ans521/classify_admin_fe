@@ -6,7 +6,7 @@ const config = {
   },
   plugins: [],
   proxy : {
-    'base' : 'http://localhost/:4000/api'
+    'base' : 'http://82.180.144.143/:4000/api'
   },
   "compilerOptions": {
     "jsx": "react-jsx",
