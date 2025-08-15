@@ -94,11 +94,20 @@ const ProviderOffers: React.FC = () => {
       console.error(error);
     }
   };
-
+  const token = localStorage.getItem("token");
   const getBanners = async () => {
     try {
-      const res : any = await api.get('/get-all-offer');
-      if (res.status === 200) setBannerList(res.data.data);
+      const res : any = await api.get('/get-all-offer', {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+      });
+      if (res.status === 200) setBannerList(res.data.data); 
+      if(res.status === 401){
+        alert("Session expired, please login again");
+        localStorage.removeItem("token");
+        window.location.href = "/auth";
+      }
     } catch (err) {
       console.error(err);
     }

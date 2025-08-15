@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, Star } from 'lucide-react';
 import Sidebar from '../sidebar/sidebar';
 import Navbar from '../navbar/navbar';
 import axios from 'axios';
@@ -12,6 +12,7 @@ import axios from 'axios';
 interface Category {
   id?: string;
   name: string;
+  isMain : boolean;
   subcategories: string[];
 }
 
@@ -33,6 +34,7 @@ const Category: React.FC = () => {
   const api = axios.create({
     baseURL: 'http://82.180.144.143:4000/api'
   });
+      console.log("categories", categories);
 
   const handleAddCategory = async () => {
     if (!newCategory.trim()) {
@@ -40,17 +42,13 @@ const Category: React.FC = () => {
       return;
     }
 
+
     try {
       const validSubcategories = newSubcategories.filter(sub => sub.trim());
       if (validSubcategories.length === 0) {
         alert('Please add at least one subcategory.');
         return;
       }
-      console.log("validSubcategories", validSubcategories);
-      console.log("subCatId", subCatId);
-      console.log(isEditMode, "isEditMode");
-      console.log("uploadedFileUrl", uploadedFileUrl);
-
       if(!isEditMode){
         const subCategroiesWithImage = validSubcategories.map((subcategory, index) => {
           return {
@@ -101,7 +99,6 @@ const Category: React.FC = () => {
   };
   const handleAddIconImage = async() => {
     try {
-
       const mapIconFileUrl = iconFileUrl.map((item : any) => {
         return {
           iconImage: Object.values(item)[0], 
@@ -127,7 +124,9 @@ const Category: React.FC = () => {
   const allCategories = async () => {
     try {
       const { data } = await api.get('/get-all-category');
+      console.log("data", data);
       setCategories(data.data);
+      console.log("categories", categories);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -365,6 +364,21 @@ useEffect(() => {
       console.error('Error unchecking item:', error);
     }
   }
+
+  const handleIsMainCat = async (id: string, isMain: boolean) => {
+    try {
+      const response = await api.patch('/update-main-cat', null, {
+        params : { id, isMain: !isMain }
+    });
+      if (response.status === 200) {
+        alert(`Category ${!isMain ? 'set as main' : 'removed from main'} successfully`);
+        allCategories();
+      }
+    } catch (error) {
+      console.error('Error updating main category:', error);
+      alert('Failed to update main category');
+    }
+  };
   return (
     <div className="flex h-screen bg-[#FFFFFF]">
       <Sidebar />
@@ -455,8 +469,11 @@ useEffect(() => {
                   {categories && categories?.map((category: any) => (
                     <div key={category?.id} className="border border-gray-100 rounded-lg shadow-sm p-4">
                       <div className="flex justify-between items-center mb-2">
-                        <h3 className="text-2xl font-medium ml-2 text-gray-800">Category : {category?.category}</h3>
-                        <div className='flex'>
+                        <h3 className="text-2xl font-medium ml-2 text-gray-800">Category : {category.category}</h3>
+                        <div className='flex items-center'>
+                          <div className='flex items-center gap-1' onClick={() => handleIsMainCat(category?._id, category?.isMain)}>
+                              <Star size={20} className={`${category?.isMain ? 'text-yellow-500 fill-yellow-400' : 'text-gray-500 fill-gray-400'} mr-2`} />
+                          </div>
                         <button
                           onClick={() => handleDeleteCategory(category?._id?.toString())}  
                           className="flex items-center space-x-1 px-3 py-1.5 text-red-500 hover:bg-red-50 rounded-lg focus:outline-none transition-colors"

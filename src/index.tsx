@@ -15,6 +15,8 @@ import PhoneVerification from './component/ProviderList/PhoneVerification';
 import Category from './component/ProviderList/Category';
 import BannerCategory from './component/ProviderList/banner';
 import ProviderOffers from './component/offers/ProviderOffers';
+import Auth from './component/auth/Auth';
+import PrivateRoute from './component/auth/privateRoute';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -22,48 +24,48 @@ const root = ReactDOM.createRoot(
 
 const router = createBrowserRouter([
   {
-    path : '/',
-    element : <App/>
-  }, 
-  {
-    path: "/login",
-    // element: <loginPage />,
+    path:"/auth",
+    element: <Auth />,
   },
   {
+    path: '/',
+    element : <PrivateRoute element={<App/>}/>
+  },  
+  {
     path : "/document/:id",
-    element : <UserDocument/>
+    element :  <PrivateRoute element={<UserDocument/>}/>
   },
   {
     path : "/service-zone",
-    element : <Sidebar/>
+    element :  <PrivateRoute element={<Sidebar/>} />
   },
   {
     path : "/service-provider/view",
-    element : <ViewProvider/>
+    element :  <PrivateRoute element={<ViewProvider/>}/>
   },
   {
   path : "/service-provider/phone",
-  element : <PhoneVerification/>
+  element :  <PrivateRoute element={<PhoneVerification/>}/>
   },
   {
-    path : "/service-provider/provider-add",
-    element : <AddProvider/>
+    path : "/service-provider/provider-add",  
+    element :  <PrivateRoute element={<AddProvider/>}/>
   },
   {
     path : "/service-provider/view/:id",
-    element : <UserDocument/>
+    element : <PrivateRoute element={ <UserDocument/>}  />
   },
   {
     path : "/category",
-    element : <Category/>
+    element :  <PrivateRoute element={<Category/>}/>
   },
   {
-    path : '/banner',
-    element : <BannerCategory/>
+    path : "/banner",
+    element :  <PrivateRoute element={<BannerCategory/>}/>
   },
   {
-    path : '/offers',
-    element : <ProviderOffers/>
+    path : "/offers",
+    element :  <PrivateRoute element={<ProviderOffers/>} path='/offers'/>
   }
 ])
 

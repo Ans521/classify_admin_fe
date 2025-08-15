@@ -20,6 +20,7 @@ const Dashboard: React.FC = () => {
 
   if (location.pathname !== "/") return null;
 
+  
   return (
     <div className="flex w-full h-screen overflow-hidden">
       <Sidebar />
