@@ -15,9 +15,11 @@ const BannerCategory: React.FC = () => {
     file: File | null;
     imageUrl: string | null;
     link: string;
-    id?: string
+    id?: string;
+    text?: string;
+    message?: string
   }[]>([
-    { file: null, imageUrl: null, link: '' },
+    { file: null, imageUrl: null, link: '', text: '', message: '' },
   ]);
 
 
@@ -47,10 +49,9 @@ const BannerCategory: React.FC = () => {
     }
   }
 
-  const handleLinkChange = (index: number, value: string) => {
-    const newBanners = [...banners];
-    newBanners[index].link = value;
-    setBanners(newBanners);
+  const handleInputChange = (index: number, key: string, value: string) => {
+    setBanners(prevBanners => prevBanners.map((banner, i) => i === index ? {...banner, [key] : value} : banner)
+    )
   };
 
   const addNewBanner = () => {
@@ -67,14 +68,21 @@ const BannerCategory: React.FC = () => {
 
   const handleUploadBanners = async (id?: string) => {
     try {
-      const banner = banners.map((banner: any) => {
-        return {
+      const banner = banners.map((banner: any) => ({
           _id: banner.id,
           imageUrl: banner.imageUrl,
           link: banner.link,
           position : isChecked ?  'top' : 'bottom'
-        }
-      })
+    }))
+
+    const bannerNotify = banners.map((banner: any) => ({
+      tittle: banner.text,
+      message: banner.message,
+      imageUrl : banner.imageUrl
+    }))
+  
+    const payload = {banner, bannerNotify};
+
       if (isEditMode) {
         const response: any = await api.put('/update-banner', { data: banner})
         if (response.status === 200) {
@@ -83,7 +91,7 @@ const BannerCategory: React.FC = () => {
           setIsEditMode(false)
         }
       } else {
-        const response: any = await api.post('/add-banner', { data: banner, position : isChecked ?  'top' : 'bottom'})
+        const response: any = await api.post('/add-banner', { data: payload, position : isChecked ?  'top' : 'bottom'})
         if (response.status === 200) {
           alert("Banners added successfully");
           setBanners([{ file: null, imageUrl: null, link: '' }]);
@@ -173,7 +181,20 @@ const BannerCategory: React.FC = () => {
                 type="text"
                 placeholder="Enter banner link"
                 value={banner.link}
-                onChange={(e) => handleLinkChange(index, e.target.value)}
+                onChange={(e) => handleInputChange(index,'link', e.target.value)}
+                className="border border-gray-300 rounded px-3 py-2 w-full max-w-md"
+              />
+              <input
+                type="text"
+                placeholder="Enter Notification Title"
+                value={banner.text}
+                onChange={(e) => handleInputChange(index,'text', e.target.value)}
+                className="border border-gray-300 rounded px-3 py-2 w-full max-w-md"
+              />
+              <textarea
+                placeholder="Enter Notification Message"
+                value={banner.message}
+                onChange={(e) => handleInputChange(index,'message', e.target.value)}
                 className="border border-gray-300 rounded px-3 py-2 w-full max-w-md"
               />
             </div>
