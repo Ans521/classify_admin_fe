@@ -9,12 +9,14 @@ interface Banner {
   price: string;
   validity: string;
   link?: string;
-  id : string | undefined
+  id : string | undefined,
+  tittle? : string,
+  message? : string
 }
 
 const ProviderOffers: React.FC = () => {
   const [banners, setBanners] = useState<Banner[]>([
-    { file: null, imageUrl: null, price: '', validity: '',id : undefined },
+    { file: null, imageUrl: null, price: '', validity: '', id : undefined, tittle : '', message : ''},
   ]);
   const [editOfferId, setEditOfferId] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
@@ -68,17 +70,30 @@ const ProviderOffers: React.FC = () => {
 
   const handleUploadBanners = async () => {
     try {
-      const payload = banners.map((b: any) => ({
+      let insertPayload : any = banners.map((b: any) => ({
         imageUrl: b.imageUrl,
         price: b.price,
         validity: b.validity,
       }));
       let updatePayload;
+      let notificationInfo : any
 
       if(isEditMode){
-        updatePayload = payload[0];
+        updatePayload = insertPayload[0];
+      }else{
+        notificationInfo = banners.map((b: any) => ({
+          tittle: b.tittle,
+          message: b.message,
+          imageUrl : b.imageUrl
+        }));
       }
+
       console.log("editOfferId", editOfferId);
+
+      const payload = {
+          insertPayload,
+          notificationInfo
+      }
       const response : any = isEditMode
         ? await api.patch('/update-offer', { data: updatePayload }, {params  : {id : editOfferId}})
         : await api.post('/add-offer', { data: payload });
@@ -188,9 +203,16 @@ const ProviderOffers: React.FC = () => {
               />
               <input
                 type="text"
-                placeholder="Optional: Redirect link"
-                value={banner.link}
-                onChange={(e) => handleFieldChange(index, 'link', e.target.value)}
+                placeholder="Tittle for Notification"
+                value={banner.tittle}
+                onChange={(e) => handleFieldChange(index, 'tittle', e.target.value)}
+                className="border px-3 py-2 rounded"
+              />
+              <input
+                type="text"
+                placeholder="Add message for Notification"
+                value={banner.message}
+                onChange={(e) => handleFieldChange(index, 'message', e.target.value)}
                 className="border px-3 py-2 rounded"
               />
             </div>
@@ -219,7 +241,7 @@ const ProviderOffers: React.FC = () => {
             <div key={banner._id} className="border p-4 rounded-lg shadow-sm space-y-4 bg-white">
               <img src={banner.imageUrl} alt="banner" className="w-full h-80 object-contain rounded" />
               <div>Price: ₹{banner.price}</div>
-              <div>Valid for: {banner.validity} month(s)</div>
+              <div>Valid for: {banner.validity} days(s)</div>
               {banner.link && <div className="text-blue-500">Link: {banner.link}</div>}
 
               <div className="flex gap-4 justify-end">
