@@ -31,6 +31,8 @@ const Category: React.FC = () => {
   const [catId, setCatId] = useState<string | null>(null);
   const [subCatId, setSubCatId] = useState<string[]>([]);
 
+  const token = localStorage.getItem("token");
+  
   const api = axios.create({
     baseURL: 'http://82.180.144.143:4000/api'
   });
@@ -123,7 +125,11 @@ const Category: React.FC = () => {
 
   const allCategories = async () => {
     try {
-      const { data } = await api.get('/get-all-category');
+      const { data } = await api.get('/get-all-category', {
+       headers: {
+        Authorization: `Bearer ${token}`
+      }
+      });
       console.log("data", data);
       setCategories(data.data);
       console.log("categories", categories);

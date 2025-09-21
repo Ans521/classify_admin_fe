@@ -4,7 +4,7 @@ import Sidebar from '../sidebar/sidebar';
 import Navbar from '../navbar/navbar';
 // import { FaProjectDiagram } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAddProviderMutation , useGetAllCategoryQuery } from '../redux/api';
+import { useAddProviderMutation, useGetAllCategoryQuery } from '../redux/api';
 import { useAppSelector } from '../redux/hook';
 import { useAppDispatch } from '../redux/hook';
 interface FormData {
@@ -15,7 +15,7 @@ interface FormData {
   aadharAddress: string;
   aadharCard: null,
   aadharCardBack: null,
-  panCard:  null,
+  panCard: null,
   photo: null;
 }
 
@@ -27,7 +27,7 @@ interface FileUrls {
 }
 
 interface SubcategoryOptions {
-  [key : string] : string[]
+  [key: string]: string[]
 }
 
 const AddProvider: React.FC = () => {
@@ -35,7 +35,7 @@ const AddProvider: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const phoneNumber = useAppSelector((state : any) => state.register.phoneNumber);
+  const phoneNumber = useAppSelector((state: any) => state.register.phoneNumber);
   useEffect(() => {
     // If no phone number in context, redirect to phone verification
     if (!phoneNumber) {
@@ -56,7 +56,7 @@ const AddProvider: React.FC = () => {
     photo: null,
     panCard: null,
   });
-  
+
   const [formData, setFormData] = useState<FormData>({
     name: "",
     address: "",
@@ -76,34 +76,48 @@ const AddProvider: React.FC = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof typeof formData) => {
     const file = e.target.files?.[0];
-    
-    if (file) {
-        const imagePreview = URL.createObjectURL(file);
-      setFileUrls((prev : any) => ({ ...prev, [field]: imagePreview }));
 
-      setFormData((prev : any) => ({...prev,  [field] : file }));
+    if (file) {
+      const imagePreview = URL.createObjectURL(file);
+      setFileUrls((prev: any) => ({ ...prev, [field]: imagePreview }));
+
+      setFormData((prev: any) => ({ ...prev, [field]: file }));
     }
   };
 
-  const {data, error, isLoading} =  useGetAllCategoryQuery(undefined);
-  useEffect(() => {
-    if(data){
-      // Assuming data is structured as { category: [...], subcategories: [...] }
-      setOptions((data as any)?.category.map((item : any) => item?.category));
-      const subcatOptions = (data as any).data?.filter((item : any) => item.category === selectedCategory);
+  const { data, error, isLoading } = useGetAllCategoryQuery(undefined);
 
-      setSubcategoryOptions(subcatOptions?.length > 0 ? subcatOptions[0]?.subcategories : []);
+  useEffect(() => {
+    if (data) {
+
+      // ✅ Set main categories
+      setOptions((data as any)?.data.map((item: any) => item?.category));
+
+      // ✅ Set subcategories based on selected category
+      setSubcategoryOptions(
+        (data as any).data.find((item: any) => item.category === selectedCategory)?.subcategories || []
+      );
     }
+
     if (error) {
       console.error("Error fetching categories:", error);
       alert("Failed to fetch categories. Please try again.");
     }
+
     if (isLoading) {
       console.log("Loading categories...");
     }
-  }, [data, error, selectedCategory]);
 
-  console.log("subcategoryOptions", subcategoryOptions);
+  }, [data, error, isLoading, selectedCategory]);
+
+
+  useEffect(() => {
+    if (data) {
+      setSubcategoryOptions((data as any).data.find((item: any) => item.category === selectedCategory)?.subcategories || []);
+    }
+  }, [selectedCategory, data]);
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -172,7 +186,7 @@ const AddProvider: React.FC = () => {
               <h1 className="text-3xl font-bold text-gray-800 mb-2 text-center">Add New Provider</h1>
               <p className="text-gray-600 text-center">Fill in the details to register a new service provider</p>
             </div>
-     
+
             <form className="space-y-6" onSubmit={handleSubmit}>
               {/* Existing form fields */}
               <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
@@ -231,9 +245,9 @@ const AddProvider: React.FC = () => {
                       {selectedSubcategory}
                       <ChevronDown className="w-5 h-5 ml-2" />
                     </button>
-                    {isSubcategoryOpen  && (
+                    {isSubcategoryOpen && (
                       <div className="absolute w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
-                        {subcategoryOptions?.map((option :any , index :any) => (
+                        {subcategoryOptions?.map((option: any, index: any) => (
                           <div
                             key={index}
                             onClick={() => handleSubcategorySelect(option)}
@@ -306,8 +320,8 @@ const AddProvider: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => {
-                            setFormData(prev => ({ ...prev, aadharCard: null}));
-                            setFileUrls((prev : any) => ({ ...prev, aadharCard: null }))
+                            setFormData(prev => ({ ...prev, aadharCard: null }));
+                            setFileUrls((prev: any) => ({ ...prev, aadharCard: null }))
                           }}
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                         >
@@ -345,8 +359,8 @@ const AddProvider: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => {
-                            setFormData(prev => ({ ...prev, aadharCardBack: null}));
-                            setFileUrls((prev : any) => ({ ...prev, aadharCardBack: null }))
+                            setFormData(prev => ({ ...prev, aadharCardBack: null }));
+                            setFileUrls((prev: any) => ({ ...prev, aadharCardBack: null }))
                           }}
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                         >
@@ -387,8 +401,8 @@ const AddProvider: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => {
-                            setFormData(prev => ({ ...prev, photo: null}));
-                            setFileUrls((prev : any) => ({ ...prev, photo: null }))
+                            setFormData(prev => ({ ...prev, photo: null }));
+                            setFileUrls((prev: any) => ({ ...prev, photo: null }))
                           }}
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                         >
@@ -426,8 +440,8 @@ const AddProvider: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => {
-                            setFormData(prev => ({ ...prev, panCard: null}));
-                            setFileUrls((prev : any) => ({ ...prev, panCard: null }))
+                            setFormData(prev => ({ ...prev, panCard: null }));
+                            setFileUrls((prev: any) => ({ ...prev, panCard: null }))
                           }}
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                         >
