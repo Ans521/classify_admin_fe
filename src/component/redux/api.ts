@@ -1,40 +1,50 @@
-import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export const api = createApi({
-    reducerPath : 'api',
-    baseQuery : fetchBaseQuery({
+    reducerPath: 'api',
+    baseQuery: fetchBaseQuery({
         baseUrl: 'http://82.180.144.143:4000/api/',
-    }),
-    endpoints : (builder : any) => ({
-        getAllCategory : builder.query({
-            query : () => 'get-all-category',
+        prepareHeaders: (headers) => {
+                const token = localStorage.getItem("token"); 
+
+                if (token) {
+                    headers.set("authorization", `Bearer ${token}`);
+                }
+                return headers;
+        },
+    }, 
+),
+    
+    endpoints: (builder: any) => ({
+        getAllCategory: builder.query({
+            query: () => 'get-all-category',
         }),
-        addProvider : builder.mutation({
-            query : (data : any) => ({
-                url : 'add-provider',
-                method : 'POST',
-                body : data,
+        addProvider: builder.mutation({
+            query: (data: any) => ({
+                url: 'add-provider',
+                method: 'POST',
+                body: data,
             })
         }),
-        addCategories : builder.mutation({
-            query : (data : any) => ({
-                url : 'categories',
-                method : 'POST',
-                body : data,
+        addCategories: builder.mutation({
+            query: (data: any) => ({
+                url: 'categories',
+                method: 'POST',
+                body: data,
             })
         }),
-        updateCategory : builder.mutation({
-            query : (data : any) => ({
-                url : 'update-category',
-                method : 'PUT',
-                body : data,
+        updateCategory: builder.mutation({
+            query: (data: any) => ({
+                url: 'update-category',
+                method: 'PUT',
+                body: data,
             })
         })
     }),
 })
 
 export const {
-    useGetAllCategoryQuery, 
+    useGetAllCategoryQuery,
     useAddProviderMutation,
     useAddCategoriesMutation,
     useUpdateCategoryMutation

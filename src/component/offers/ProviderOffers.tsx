@@ -110,6 +110,7 @@ const ProviderOffers: React.FC = () => {
     }
   };
   const token = localStorage.getItem("token");
+  console.log("token", token);
   const getBanners = async () => {
     try {
       const res : any = await api.get('/get-all-offer', {

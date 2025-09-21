@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import axios from "axios";
 import { useLocation } from "react-router-dom";
 import {
   DollarSign,
@@ -18,9 +19,32 @@ import Sidebar from "../sidebar/sidebar";
 const Dashboard: React.FC = () => {
   const location = useLocation();
 
+  const [count, setCount] = React.useState<any>({});
+
+  const api = axios.create({
+    baseURL: 'http://82.180.144.143:4000/api'
+    });
+
+    
+    
+    // useEffect(() => {
+    //   fetchData();
+    // }, []);
+
+    const token = localStorage.getItem("token");
+  const fetchData = async () => {
+    const {data} = await api.get('/count', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    // setCount(data);
+    console.log("data", data);
+  }
+
   if (location.pathname !== "/") return null;
 
-  
+
   return (
     <div className="flex w-full h-screen overflow-hidden">
       <Sidebar />
@@ -30,8 +54,8 @@ const Dashboard: React.FC = () => {
           <div className="text-2xl px-2 py-4 font-bold">DashBoard</div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-20 mt-1">
             {[
-              { title: "Total Revenue", amount: "$12", icon: <DollarSign size={28} color="#3B82F6" /> },
               { title: "Total Users", amount: "120", icon: <Users size={28} color="#3B82F6" /> },
+              { title: "Total Revenue", amount: "$12", icon: <DollarSign size={28} color="#3B82F6" /> },
               { title: "New Orders", amount: "45", icon: <ShoppingCart size={28} color="#3B82F6" /> },
               { title: "Active Plans", amount: "8", icon: <Briefcase size={28} color="#3B82F6" /> },
               { title: "Feedbacks", amount: "32", icon: <MessageCircle size={28} color="#3B82F6" /> },
@@ -40,11 +64,11 @@ const Dashboard: React.FC = () => {
               { title: "Active Users", amount: "250+", icon: <Users size={28} color="#3B82F6" /> },
               { title: "Total Sales", amount: "$2.5K", icon: <DollarSign size={28} color="#3B82F6" /> },
               { title: "New Clients", amount: "85", icon: <Briefcase size={28} color="#3B82F6" /> },
-              { title: "Messages", amount: "124", icon: <MessageCircle size={28} color="#3B82F6" /> },
-              { title: "Global Users", amount: "1.2K", icon: <Globe size={28} color="#3B82F6" /> },
-              { title: "Events", amount: "3", icon: <Calendar size={28} color="#3B82F6" /> },
-              { title: "Reports", amount: "27", icon: <FileText size={28} color="#3B82F6" /> },
-              { title: "Performance", amount: "95%", icon: <Activity size={28} color="#3B82F6" /> },
+              // { title: "Messages", amount: "124", icon: <MessageCircle size={28} color="#3B82F6" /> },
+              // { title: "Global Users", amount: "1.2K", icon: <Globe size={28} color="#3B82F6" /> },
+              // { title: "Events", amount: "3", icon: <Calendar size={28} color="#3B82F6" /> },
+              // { title: "Reports", amount: "27", icon: <FileText size={28} color="#3B82F6" /> },
+              // { title: "Performance", amount: "95%", icon: <Activity size={28} color="#3B82F6" /> },
             ].map((card, idx) => (
               <div
                 key={idx}

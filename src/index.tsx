@@ -17,6 +17,7 @@ import BannerCategory from './component/ProviderList/banner';
 import ProviderOffers from './component/offers/ProviderOffers';
 import Auth from './component/auth/Auth';
 import PrivateRoute from './component/auth/privateRoute';
+import GeneralNotify from './component/ProviderList/generalNotify';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -66,6 +67,10 @@ const router = createBrowserRouter([
   {
     path : "/offers",
     element :  <PrivateRoute element={<ProviderOffers/>} path='/offers'/>
+  },
+  {
+    path : '/general-notify',
+    element : <PrivateRoute element={<GeneralNotify/>}/>
   }
 ])
 
