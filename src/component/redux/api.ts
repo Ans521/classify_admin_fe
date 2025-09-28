@@ -21,7 +21,7 @@ export const api = createApi({
         }),
         addProvider: builder.mutation({
             query: (data: any) => ({
-                url: 'add-provider',
+                url: 'resgister-admin-provider',
                 method: 'POST',
                 body: data,
             })
@@ -39,6 +39,9 @@ export const api = createApi({
                 method: 'PUT',
                 body: data,
             })
+        }),
+        getCount : builder.query({
+            query : () => 'dash-count'
         })
     }),
 })
@@ -47,7 +50,8 @@ export const {
     useGetAllCategoryQuery,
     useAddProviderMutation,
     useAddCategoriesMutation,
-    useUpdateCategoryMutation
+    useUpdateCategoryMutation,
+    useGetCountQuery
 } = api;
 
 export default api.reducer;

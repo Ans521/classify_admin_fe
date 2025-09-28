@@ -7,23 +7,24 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAddProviderMutation, useGetAllCategoryQuery } from '../redux/api';
 import { useAppSelector } from '../redux/hook';
 import { useAppDispatch } from '../redux/hook';
+import { setPhoneNumber } from '../redux/register';
 interface FormData {
   name: string;
   category: string;
   subcategory: string;
   address: string;
   aadharAddress: string;
-  aadharCard: null,
-  aadharCardBack: null,
-  panCard: null,
-  photo: null;
+  AC: null,
+  ACB: null,
+  PH: null,
+  PC: null;
 }
 
 interface FileUrls {
-  aadharCard: any | null;
-  aadharCardBack: any | null;
-  photo: any | null;
-  panCard: any | null;
+  AC: any | null;
+  ACB: any | null;
+  PH: any | null,
+  PC: any | null;
 }
 
 interface SubcategoryOptions {
@@ -51,10 +52,10 @@ const AddProvider: React.FC = () => {
   const [options, setOptions] = useState<any[]>([]);
   const [subcategoryOptions, setSubcategoryOptions] = useState([]);
   const [fileUrls, setFileUrls] = useState<FileUrls>({
-    aadharCard: null,
-    aadharCardBack: null,
-    photo: null,
-    panCard: null,
+    AC: null,
+    ACB: null,
+    PH: null,
+    PC: null
   });
 
   const [formData, setFormData] = useState<FormData>({
@@ -63,10 +64,10 @@ const AddProvider: React.FC = () => {
     aadharAddress: "",
     category: "",
     subcategory: "",
-    aadharCard: null,
-    aadharCardBack: null,
-    panCard: null,
-    photo: null
+    AC: null,
+    ACB: null,
+    PH: null,
+    PC: null
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -76,6 +77,7 @@ const AddProvider: React.FC = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof typeof formData) => {
     const file = e.target.files?.[0];
+
 
     if (file) {
       const imagePreview = URL.createObjectURL(file);
@@ -121,39 +123,52 @@ const AddProvider: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Add phone number from context to the request
-      const dataToSend = {
-        ...formData,
-        phone: phoneNumber
-      };
-      console.log("dataToSend", dataToSend)
+      const dataToSend = new FormData();
 
-      const response = await addProvider(dataToSend).unwrap();
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value instanceof File) {
+          // Append file directly
+         
+          
+          dataToSend.append(key, value);
+        } else if (typeof value === "object") {
+          
+          dataToSend.append(key, JSON.stringify(value));
+        } else if (value !== null && value !== undefined) {
+          
+          dataToSend.append(key, value.toString());
+        }
+      });
 
-      console.log("response come", response)
-      // if (response.status === 200) {
-      //   alert("Provider added successfully");
-      //   setFileUrls({
-      //     aadharCard: null,
-      //     aadharCardBack: null,
-      //     photo: null,
-      //     panCard: null,
-      //   });
-      //   setFormData({
-      //     name: "",
-      //     email: "",
-      //     category: "",
-      //     subcategory: "",
-      //     address: "",
-      //     aadharAddress: "",
-      //     aadharCard: null,
-      //     aadharCardBack: null,
-      //     panCard:  null,
-      //     photo: null
-      //   });  
-      //    navigate('/service-provider/view');
-      //    dispatch(setPhoneNumber(''));
-      //  }
+
+
+      console.log("datatosend", dataToSend)
+
+      dataToSend.append('phone', phoneNumber)
+      await addProvider(dataToSend).unwrap();
+
+      
+        alert("Provider added successfully");
+        setFileUrls({
+          AC: null,
+          ACB: null,
+          PH: null,
+          PC: null,
+        });
+        setFormData({
+          name: "",
+          category: "",
+          subcategory: "",
+          address: "",
+          aadharAddress: "",
+          AC: null,
+          ACB: null,
+          PC:  null,
+          PH: null
+        });  
+         navigate('/service-provider/view');
+      
+         dispatch(setPhoneNumber(''));
 
     } catch (error) {
       console.error("Error adding provider:", error);
@@ -162,19 +177,20 @@ const AddProvider: React.FC = () => {
   };
 
   const handleCategorySelect = (option: string) => {
+    console.log("option", option)
     setSelectedCategory(option);
     setFormData(prev => ({ ...prev, category: option, subcategory: "" }));
     setSelectedSubcategory("select subcategory");
     setIsOpen(false);
   };
 
-  const handleSubcategorySelect = (option: string) => {
-    setSelectedSubcategory(option);
+  const handleSubcategorySelect = (option: any) => {
+    console.log("option", option)
+    setSelectedSubcategory(option?.name);
     setFormData(prev => ({ ...prev, subcategory: option }));
     setIsSubcategoryOpen(false);
   };
 
-  console.log("formData category", formData.category);
   return (
     <div className="flex h-screen bg-[#FFFFFF]">
       <Sidebar />
@@ -253,7 +269,7 @@ const AddProvider: React.FC = () => {
                             onClick={() => handleSubcategorySelect(option)}
                             className="px-4 py-2 hover:bg-gray-100 cursor-pointer focus:outline-none"
                           >
-                            {option.name}
+                            {option?.name}
                           </div>
                         ))}
                       </div>
@@ -300,7 +316,7 @@ const AddProvider: React.FC = () => {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => handleFileChange(e, 'aadharCard')}
+                      onChange={(e) => handleFileChange(e, 'AC')}
                       className="hidden"
                       id="aadharCard"
                     />
@@ -310,10 +326,10 @@ const AddProvider: React.FC = () => {
                     >
                       Choose File
                     </label>
-                    {fileUrls?.aadharCard && (
+                    {fileUrls?.AC && (
                       <div className="relative w-24 h-24">
                         <img
-                          src={fileUrls.aadharCard}
+                          src={fileUrls.AC}
                           alt="Aadhar Card Front Preview"
                           className="w-full h-full object-cover rounded-lg"
                         />
@@ -339,7 +355,7 @@ const AddProvider: React.FC = () => {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => handleFileChange(e, 'aadharCardBack')}
+                      onChange={(e) => handleFileChange(e, 'ACB')}
                       className="hidden"
                       id="aadharCardBack"
                     />
@@ -349,10 +365,10 @@ const AddProvider: React.FC = () => {
                     >
                       Choose File
                     </label>
-                    {fileUrls?.aadharCardBack && (
+                    {fileUrls?.ACB && (
                       <div className="relative w-24 h-24">
                         <img
-                          src={fileUrls.aadharCardBack}
+                          src={fileUrls.ACB}
                           alt="Aadhar Card Back Preview"
                           className="w-full h-full object-cover rounded-lg"
                         />
@@ -381,7 +397,7 @@ const AddProvider: React.FC = () => {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => handleFileChange(e, 'photo')}
+                      onChange={(e) => handleFileChange(e, 'PH')}
                       className="hidden"
                       id="photo"
                     />
@@ -391,11 +407,11 @@ const AddProvider: React.FC = () => {
                     >
                       Choose File
                     </label>
-                    {fileUrls?.photo && (
+                    {fileUrls?.PH && (
                       <div className="relative w-24 h-24">
                         <img
-                          src={fileUrls.photo}
-                          alt="Photo Preview"
+                          src={fileUrls.PH}
+                          alt="Preview"
                           className="w-full h-full object-cover rounded-lg"
                         />
                         <button
@@ -420,7 +436,7 @@ const AddProvider: React.FC = () => {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => handleFileChange(e, 'panCard')}
+                      onChange={(e) => handleFileChange(e, 'PC')}
                       className="hidden"
                       id="panCard"
                     />
@@ -430,10 +446,10 @@ const AddProvider: React.FC = () => {
                     >
                       Choose File
                     </label>
-                    {fileUrls?.panCard && (
+                    {fileUrls?.PC && (
                       <div className="relative w-24 h-24">
                         <img
-                          src={fileUrls.panCard}
+                          src={fileUrls.PC}
                           alt="PAN Card Preview"
                           className="w-full h-full object-cover rounded-lg"
                         />
