@@ -1,12 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
+import './../src/index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import UserDocument from './component/userdocument/UserDocument';
 import { IdProvider } from './component/context';
-import { Sidebar } from 'lucide-react';
+import { Sidebar, User } from 'lucide-react';
 import { Provider as ReduxProvider } from 'react-redux';
 import { store } from './component/redux/store';
 import AddProvider from './component/ProviderList/addProvider';
@@ -18,6 +18,8 @@ import ProviderOffers from './component/offers/ProviderOffers';
 import Auth from './component/auth/Auth';
 import PrivateRoute from './component/auth/privateRoute';
 import GeneralNotify from './component/ProviderList/generalNotify';
+import UserView from './component/users/UserView';
+
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -71,6 +73,10 @@ const router = createBrowserRouter([
   {
     path : '/general-notify',
     element : <PrivateRoute element={<GeneralNotify/>}/>
+  },
+  {
+    path : '/all-users',
+    element : <PrivateRoute element={<UserView/>}/>
   }
 ])
 

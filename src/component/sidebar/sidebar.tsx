@@ -11,6 +11,7 @@ import {
   DollarSign,
   ChevronDown,
   ChevronUp,
+  Users,
 } from "lucide-react";
 import path from "path";
 
@@ -31,6 +32,7 @@ const Sidebar: React.FC = () => {
             { name: "General Notification", path: "/general-notify", icon: <List size={20} /> },
             {name : "Offers", path : "/offers", icon : <Tag size={20}/>},
             { name: "Category", path: "/category", icon: <List size={20} /> },
+            { name: "All Users", path: "/all-users", icon: <Users size={20} /> },
             { name: "Service Zone", path: "/service-zone", icon: <Map size={20} /> },
             { name: "Payment Method", path: "/payment-method", icon: <CreditCard size={20} /> },
             { name: "Provider Category", path: "/provider-category", icon: <Tag size={20} /> },
