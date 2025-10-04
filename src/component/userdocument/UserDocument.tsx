@@ -37,7 +37,6 @@ const UserDocument: React.FC = () => {
     'Pan Card' = "PC",
     'Provider Photo' = "PH"
   }
-  console.log("enum", Object.entries(DocumentType))
   const api = axios.create({
     'baseURL': 'http://82.180.144.143:4000/api'
   });
