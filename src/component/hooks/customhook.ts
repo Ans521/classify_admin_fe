@@ -56,12 +56,16 @@ export const usePagination = ({ list, itemsPerPage }: PaginationProps) => {
     const [suggestions, setSuggestions] = useState<any[]>([]);
 
     const filteredProviders = list?.filter((provider: any) => {
-        return (
-            (typeof provider?.name === 'string' &&
-                provider?.name?.toLowerCase().includes(searchTerm.toLowerCase())) || provider?.pincode.toString().includes(searchTerm.toLowerCase())
-        )
-    });
+    const term = searchTerm.toLowerCase();
+    return (
+        (typeof provider?.name === 'string' && provider.name.toLowerCase().includes(term)) ||
+        provider?.pincode?.toString().includes(term) ||
+        provider?.phoneNo?.toString().includes(term)
+    );
+});
 
+
+    console.log("filteredProviders", filteredProviders);
 
     const totalPages = Math.ceil(filteredProviders.length / itemsPerPage);
     const startIdx = (currentPage - 1) * itemsPerPage;

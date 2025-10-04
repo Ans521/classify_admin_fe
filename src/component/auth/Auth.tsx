@@ -8,6 +8,7 @@ export default function Auth() {
     const navigate = useNavigate();
 
     const handleSubmit = async (e: any) => {
+        try {
         e.preventDefault();
 
         const payload = {
@@ -17,12 +18,18 @@ export default function Auth() {
         };
 
         const res: any = await axios.post("http://82.180.144.143:4000/api/auth", payload);
+
         localStorage.setItem("token", res.data.token);
 
         if (res.status === 200) {
             alert("Login successful");
             navigate("/");
         }
+        } catch (error) {
+            console.error("Login error:", error);
+            alert("An error occurred during login. Please try again.");
+        }
+
     };
 
     return (

@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronUp,
   Users,
+  LogOut,
 } from "lucide-react";
 import path from "path";
 
@@ -36,6 +37,7 @@ const Sidebar: React.FC = () => {
             { name: "Service Zone", path: "/service-zone", icon: <Map size={20} /> },
             { name: "Payment Method", path: "/payment-method", icon: <CreditCard size={20} /> },
             { name: "Provider Category", path: "/provider-category", icon: <Tag size={20} /> },
+            { name: "Logout", path: "/", icon: <LogOut size={20} /> },
 
             // { name: "Revenue", path: "/revenue", icon: <DollarSign size={20} /> },
             // { name: "Settings", path: "/settings", icon: <Settings size={20} /> },
@@ -90,6 +92,12 @@ const Sidebar: React.FC = () => {
                       ? "bg-[#e3e9fe] font-medium text-[#6362E7]"
                       : "text-black hover:bg-[#dde2f6] font-medium"
                   }`}
+                    onClick={() => {
+                      if (item.name === "Logout") {
+                        localStorage.removeItem("token");
+                        window.location.href = "/";
+                      }
+                    }}
                 >
                   {item.icon}
                   <span className="ml-3">{item.name}</span>
