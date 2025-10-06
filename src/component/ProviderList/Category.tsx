@@ -12,7 +12,7 @@ import axios from 'axios';
 interface Category {
   id?: string;
   name: string;
-  isMain : boolean;
+  isMain: boolean;
   subcategories: string[];
 }
 
@@ -32,11 +32,11 @@ const Category: React.FC = () => {
   const [subCatId, setSubCatId] = useState<string[]>([]);
 
   const token = localStorage.getItem("token");
-  
+
   const api = axios.create({
     baseURL: 'http://82.180.144.143:4000/api'
   });
-      console.log("categories", categories);
+  console.log("categories", categories);
 
   const handleAddCategory = async () => {
     if (!newCategory.trim()) {
@@ -51,65 +51,65 @@ const Category: React.FC = () => {
         alert('Please add at least one subcategory.');
         return;
       }
-      if(!isEditMode){
+      if (!isEditMode) {
         const subCategroiesWithImage = validSubcategories.map((subcategory, index) => {
           return {
             name: subcategory,
             image: uploadedFileUrl[index] || null
           };
-        }) 
-      const response = await api.post('/categories', {
-        category: newCategory,
-        subcategories: subCategroiesWithImage
-      });
-      if (response.status === 200) {
-        setNewCategory('');
-        setNewSubcategories(['']);
-        setUploadedFile([]);
-        setUploadedFileUrl([]);
-        setIsEditMode(false);
-        alert('Category added successfully');
-      }
-    }else{
+        })
+        const response = await api.post('/categories', {
+          category: newCategory,
+          subcategories: subCategroiesWithImage
+        });
+        if (response.status === 200) {
+          setNewCategory('');
+          setNewSubcategories(['']);
+          setUploadedFile([]);
+          setUploadedFileUrl([]);
+          setIsEditMode(false);
+          alert('Category added successfully');
+        }
+      } else {
         const updateSubcateWithImage = validSubcategories.map((subcategory, index) => {
-        return {
-          subcategoryId: subCatId[index],
-          name: subcategory,
-          image: uploadedFileUrl[index] || null
-        };
-      })
+          return {
+            subcategoryId: subCatId[index],
+            name: subcategory,
+            image: uploadedFileUrl[index] || null
+          };
+        })
         const response = await api.post('/update-category', {
-        category: newCategory,
-        categoryId: catId,
-        subcategories: updateSubcateWithImage
-      });
+          category: newCategory,
+          categoryId: catId,
+          subcategories: updateSubcateWithImage
+        });
 
-      if (response.status === 200) {
-        setNewCategory('');
-        setNewSubcategories(['']);
-        setUploadedFile([]);
-        setUploadedFileUrl([]);
-        setIsEditMode(false);
-        alert('Category updated successfully');
+        if (response.status === 200) {
+          setNewCategory('');
+          setNewSubcategories(['']);
+          setUploadedFile([]);
+          setUploadedFileUrl([]);
+          setIsEditMode(false);
+          alert('Category updated successfully');
+        }
       }
-    }
 
     } catch (error) {
       console.error('Error adding category:', error);
       alert('Failed to add category or category already exists');
     }
   };
-  const handleAddIconImage = async() => {
+  const handleAddIconImage = async () => {
     try {
-      const mapIconFileUrl = iconFileUrl.map((item : any) => {
+      const mapIconFileUrl = iconFileUrl.map((item: any) => {
         return {
-          iconImage: Object.values(item)[0], 
+          iconImage: Object.values(item)[0],
           subcategoryId: Object.keys(item)[0],
           specialCategory: true
         }
       })
 
-      const response = await api.post('/add-special-subcat', {data : mapIconFileUrl});
+      const response = await api.post('/add-special-subcat', { data: mapIconFileUrl });
       console.log("response", response);
       if (response.status === 200) {
         alert('Icon image added successfully');
@@ -120,16 +120,22 @@ const Category: React.FC = () => {
     }
   }
   useEffect(() => {
+    console.log("helloooooooo")
     allCategories();
-  }, [uploadedFileUrl, newSubcategories,newCategory, uploadedFile, checkedItems, iconFileUrl]);
+  }, [uploadedFileUrl, newSubcategories, newCategory, uploadedFile, checkedItems, iconFileUrl]);
 
   const allCategories = async () => {
     try {
+      console.log("token", token);
       const { data } = await api.get('/get-all-category', {
-       headers: {
-        Authorization: `Bearer ${token}`
-      }
-      });
+        params: {
+          isSkipAuth: true
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      },);
+      console.log("Indiamart share data and data from api")
       console.log("data", data);
       setCategories(data.data);
       console.log("categories", categories);
@@ -159,7 +165,7 @@ const Category: React.FC = () => {
           'Content-Type': 'multipart/form-data'
         }
       });
-      console.log("reponse", response)  
+      console.log("reponse", response)
 
       if (response?.status === 200) {
         alert('File uploaded successfully');
@@ -185,13 +191,13 @@ const Category: React.FC = () => {
         } else {
           console.log("subcategory in handle file change", subcategory);
           setIconFileUrl((prev) => {
-            const updated : any = [...prev];
+            const updated: any = [...prev];
             const subcatId = subcategory._id.toString();
-            const findIndex = updated.findIndex((item : any) => Object.keys(item)[0] === subcatId);
+            const findIndex = updated.findIndex((item: any) => Object.keys(item)[0] === subcatId);
             if (findIndex !== -1) {
               updated[findIndex][subcategory._id.toString()] = response.data.data;
-            }else{
-              updated.push({[subcategory._id.toString()] : response.data.data});
+            } else {
+              updated.push({ [subcategory._id.toString()]: response.data.data });
             }
             return updated;
           })
@@ -201,9 +207,7 @@ const Category: React.FC = () => {
       console.log("No file selected");
     }
   }
-useEffect(() => {
-  console.log("Updated iconFileUrl:", iconFileUrl);
-}, [iconFileUrl]);
+
   const removeIndexAndFile = (index: number) => {
     const updatedSubcategories = newSubcategories.filter((_, i) => i !== index);
     setNewSubcategories(updatedSubcategories);
@@ -213,18 +217,18 @@ useEffect(() => {
       return updated;
     })
     setUploadedFileUrl((prev) => {
-      const updated : any = [...prev];
+      const updated: any = [...prev];
       updated[index] = undefined;
       return updated;
     })
   }
 
-  const handleDeleteCategory = async (categoryId: string) => {
+  const handleDeleteCategory = async (categoryId: string, isCategory: boolean) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
       try {
         console.log("categoryId", categoryId);
 
-        const response = await api.delete(`/delete-category/${categoryId}`);
+        const response = await api.delete(`/delete-category/${categoryId}`, {params : { isCategory }});
         if (response.status === 200) {
           alert('Category deleted successfully');
           allCategories();
@@ -236,125 +240,121 @@ useEffect(() => {
     }
   };
 
-  const handleChecked = (idx : number, subcatId : string) => {
-      // Check if the subcategory ID is already in the checkedItems array 
-      console.log("subcatId", subcatId);
-      // Object.keys(checkedOne[idx]) mei [0] take out the subcat from the array as it  return the array
-    
-      // on very find iteration the item will contain each object of the array
-      // so we are checking if the subcatId is already present in the array or not
-      // if it is present then we are removing it from the array
-      // if it is not present then we are adding it to the array
-      setCheckedItems((prev) => { 
-        const checkedOne : any = [...prev]; 
-        // objecy.keys(checkedOne[idx]) will return the array of keys of the object like ["subcatId"] that why 0 is used 
-        const isChecked = checkedOne.findIndex((item : any) => Object.keys(item)[0] === subcatId)
-        if(isChecked > -1){
-          // array.splice(startIndex, deleteCount)
-          // startIndex is the index from where we want to delete the item
-          // deleteCount is the number of items we want to delete from the array
-          checkedOne.splice(isChecked, 1);
-        }else{
-          checkedOne.push({[subcatId] : true})
-        }
-        return checkedOne;
-      })
+  const handleChecked = (idx: number, subcatId: string) => {
+    // Check if the subcategory ID is already in the checkedItems array 
+    console.log("subcatId", subcatId);
+    // Object.keys(checkedOne[idx]) mei [0] take out the subcat from the array as it  return the array
+
+    // on very find iteration the item will contain each object of the array
+    // so we are checking if the subcatId is already present in the array or not
+    // if it is present then we are removing it from the array
+    // if it is not present then we are adding it to the array
+    setCheckedItems((prev) => {
+      const checkedOne: any = [...prev];
+      // objecy.keys(checkedOne[idx]) will return the array of keys of the object like ["subcatId"] that why 0 is used 
+      const isChecked = checkedOne.findIndex((item: any) => Object.keys(item)[0] === subcatId)
+      if (isChecked > -1) {
+        // array.splice(startIndex, deleteCount)
+        // startIndex is the index from where we want to delete the item
+        // deleteCount is the number of items we want to delete from the array
+        checkedOne.splice(isChecked, 1);
+      } else {
+        checkedOne.push({ [subcatId]: true })
+      }
+      return checkedOne;
+    })
   }
-  useEffect(() => { 
+  useEffect(() => {
     handleGetSpecialCategory();
   }, [imageUrl]);
-
-  useEffect(() => {
-    console.log("checkedItems", checkedItems);
-  }, [checkedItems]);
 
   const handleGetSpecialCategory = async () => {
     try {
       const { data } = await api.get('/get-special-subcat');
-      if(!data) return
+      if (!data) return
       console.log("special category", data);
-      setCheckedItems((prev : any) => {
-        const checkedOne : any = [];
-        data.data.forEach((item : any) => {
-          checkedOne.push({[item._id] : true})
+      setCheckedItems((prev: any) => {
+        const checkedOne: any = [];
+        data.data.forEach((item: any) => {
+          checkedOne.push({ [item._id]: true })
         })
         return checkedOne
       });
-      setIconFileUrl((prev : any) => {
-        const checkedOne : any = [];
-        data.data.forEach((item : any) => {
-          checkedOne.push({[item._id] : item.iconImage})
+      setIconFileUrl((prev: any) => {
+        const checkedOne: any = [];
+        data.data.forEach((item: any) => {
+          checkedOne.push({ [item._id]: item.iconImage })
         })
         return checkedOne
       }
       )
-    }catch (error) {
+    } catch (error) {
       console.error('Error fetching special category:', error);
     }
-  }  
-
-
-  const handleImageClick = (url : any) => {
-      setIsOpen(prev  => !prev)
-
-      console.log("url", url)
-      setOpenedUrl(url)
   }
-  
 
 
-  const handleEditCategory = async (categoryId : string) => {
+  const handleImageClick = (url: any) => {
+    setIsOpen(prev => !prev)
+
+    console.log("url", url)
+    setOpenedUrl(url)
+  }
+
+
+
+  const handleEditCategory = async (categoryId: string) => {
     try {
-        console.log("categoryId", categoryId);
-        const category : any = categories.find((cat : any) => cat._id === categoryId);
-        setNewCategory(category?.category);
-        setCatId(categoryId);
+      console.log("categoryId", categoryId);
+      const category: any = categories.find((cat: any) => cat._id === categoryId);
+      setNewCategory(category?.category);
+      setCatId(categoryId);
 
-        setNewSubcategories(category?.subcategories.map((subcat : any) => subcat.name));
-        setSubCatId(category?.subcategories.map((subcat : any) => subcat._id));
+      setNewSubcategories(category?.subcategories.map((subcat: any) => subcat.name));
+      setSubCatId(category?.subcategories.map((subcat: any) => subcat._id));
 
-        setUploadedFile((prev) => {
-            const updated = [...prev];
-            category?.subcategories.forEach((subcat : any, index : number) => {
-            console.log("index", index);
-            updated[index] = true;
-          })
-          return updated;
+      setUploadedFile((prev) => {
+        const updated = [...prev];
+        category?.subcategories.forEach((subcat: any, index: number) => {
+          console.log("index", index);
+          updated[index] = true;
         })
-        setImageUrl((prev) => {
-          const updated = [...prev];
-          category?.subcategories.forEach((subcat : any, index : number) => {
-            updated[index] = subcat.image;
-          })
-          return updated;
+        return updated;
+      })
+      setImageUrl((prev) => {
+        const updated = [...prev];
+        category?.subcategories.forEach((subcat: any, index: number) => {
+          updated[index] = subcat.image;
         })
-        setUploadedFileUrl((prev) => {
-          const updated = [...prev];  
-          category?.subcategories.forEach((subcat : any, index : number) => {
-            updated[index] = subcat.image;
-          })
-          return updated;
+        return updated;
+      })
+      setUploadedFileUrl((prev) => {
+        const updated = [...prev];
+        category?.subcategories.forEach((subcat: any, index: number) => {
+          updated[index] = subcat.image;
         })
-        
+        return updated;
+      })
+
     } catch (error) {
-        alert('Failed to edit category');
+      alert('Failed to edit category');
     }
   }
 
-  const handleUnChecked = async (index : number, subcatId : string) => {
-    try{
+  const handleUnChecked = async (index: number, subcatId: string) => {
+    try {
       console.log("subcatId", subcatId);
       setCheckedItems((prev) => {
-          const checkedOne : any = [...prev];
+        const checkedOne: any = [...prev];
 
-          const isChecked = checkedOne.findIndex((item : any) => Object.keys(item)[0] === subcatId)
-          if(isChecked > -1){
-            checkedOne.splice(isChecked, 1);
-          }
-          return checkedOne;
+        const isChecked = checkedOne.findIndex((item: any) => Object.keys(item)[0] === subcatId)
+        if (isChecked > -1) {
+          checkedOne.splice(isChecked, 1);
+        }
+        return checkedOne;
       })
 
-      const response : any = await api.put('/update-icon-special-subcat', {
+      const response: any = await api.put('/update-icon-special-subcat', {
         subcategoryId: subcatId,
         specialCategory: false
       })
@@ -362,10 +362,10 @@ useEffect(() => {
       console.log("response", response);
       if (response.status === 200) {
         alert('Special Subcategory removed successfully');
-      }else{
+      } else {
         alert('Failed to remove special subcategory');
       }
-    }catch (error) {
+    } catch (error) {
       alert('Failed to remove special subcategory');
       console.error('Error unchecking item:', error);
     }
@@ -374,8 +374,8 @@ useEffect(() => {
   const handleIsMainCat = async (id: string, isMain: boolean) => {
     try {
       const response = await api.patch('/update-main-cat', null, {
-        params : { id, isMain: !isMain }
-    });
+        params: { id, isMain: !isMain }
+      });
       if (response.status === 200) {
         alert(`Category ${!isMain ? 'set as main' : 'removed from main'} successfully`);
         allCategories();
@@ -427,10 +427,10 @@ useEffect(() => {
                         >{isEditMode ? "Edit Image" : "Upload Image"}</label>
                         {uploadedFile[index] && (
                           <>
-                           <span className='text-green-500 text-center'>Uploaded</span>
-                           <img src={imageUrl[index]} alt='' className='w-32 h-20 rounded-lg' onClick={() => handleImageClick(imageUrl[index])}/>
+                            <span className='text-green-500 text-center'>Uploaded</span>
+                            <img src={imageUrl[index]} alt='' className='w-32 h-20 rounded-lg' onClick={() => handleImageClick(imageUrl[index])} />
                           </>
-                        )} 
+                        )}
                         {!uploadedFile[index] && (
                           <span className='text-red-500 text-center'>Not Uploaded</span>
                         )}
@@ -449,7 +449,7 @@ useEffect(() => {
                             }}
                             className="p-2 text-red-500 hover:bg-gray-100 rounded-lg focus:outline-none"
                           >
-                            {isEditMode ?  '': <X size={20} />}
+                            {isEditMode ? '' : <X size={20} />}
                           </button>
                         )}
                       </div>
@@ -478,22 +478,23 @@ useEffect(() => {
                         <h3 className="text-2xl font-medium ml-2 text-gray-800">Category : {category.category}</h3>
                         <div className='flex items-center'>
                           <div className='flex items-center gap-1' onClick={() => handleIsMainCat(category?._id, category?.isMain)}>
-                              <Star size={20} className={`${category?.isMain ? 'text-yellow-500 fill-yellow-400' : 'text-gray-500 fill-gray-400'} mr-2`} />
+                            <Star size={20} className={`${category?.isMain ? 'text-yellow-500 fill-yellow-400' : 'text-gray-500 fill-gray-400'} mr-2`} />
                           </div>
-                        <button
-                          onClick={() => handleDeleteCategory(category?._id?.toString())}  
-                          className="flex items-center space-x-1 px-3 py-1.5 text-red-500 hover:bg-red-50 rounded-lg focus:outline-none transition-colors"
-                          title="Delete category"
-                        >
-                          <Trash2 size={16} />
-                          <span className="text-sm">Delete Category</span>
-                        </button>
-                        <button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded"
-                        onClick={() =>{ handleEditCategory(category?._id?.toString())
-                        setIsEditMode(true)
-                         }}>
-                          Edit
-                        </button>
+                          <button
+                            onClick={() => handleDeleteCategory(category?._id?.toString(), true)}
+                            className="flex items-center space-x-1 px-3 py-1.5 text-red-500 hover:bg-red-50 rounded-lg focus:outline-none transition-colors"
+                            title="Delete category"
+                          >
+                            <Trash2 size={16} />
+                            <span className="text-sm">Delete Category</span>
+                          </button>
+                          <button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded"
+                            onClick={() => {
+                              handleEditCategory(category?._id?.toString())
+                              setIsEditMode(true)
+                            }}>
+                            Edit
+                          </button>
                         </div>
 
                       </div>
@@ -503,15 +504,15 @@ useEffect(() => {
                             <div className="flex items-center space-x-3">
                               <span className="text-gray-600">{index + 1}.</span>
                               <span className="text-gray-600">{subcategory.name}</span>
-                              <img src={subcategory.image} alt='' className='w-12 h-8 rounded-lg' onClick={() => handleImageClick(subcategory.image)}/>
+                              <img src={subcategory.image} alt='' className='w-12 h-8 rounded-lg' onClick={() => handleImageClick(subcategory.image)} />
                             </div>
                             <button
-                            className="flex items-center space-x-1 px-3 py-1.5 text-red-500 hover:bg-red-50 rounded-lg focus:outline-none transition-colors"
-                            title="Delete category"
-                            onClick={() => handleDeleteCategory(subcategory._id?.toString())}
-                          >
-                            <X size={16} />
-                          </button>
+                              className="flex items-center space-x-1 px-3 py-1.5 text-red-500 hover:bg-red-50 rounded-lg focus:outline-none transition-colors"
+                              title="Delete category"
+                              onClick={() => handleDeleteCategory(subcategory._id?.toString(), false)}
+                            >
+                              <X size={16} />
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -525,59 +526,59 @@ useEffect(() => {
               <h2 className="text-xl font-semibold text-white mb-4">All Subcategories (Unified List)</h2>
               <ul className="space-y-2">
                 {categories?.flatMap((category: any, idx: any) => category.subcategories || []).map((subcategory: any, idx: number) => {
-                const matchedIcon : any = iconFileUrl.find((item: any) => Object.keys(item)[0] === subcategory._id.toString());
-                return (
-                  <li key={subcategory._id || idx} className="flex items-center justify-between space-x-3 p-3">
-                    <div className="flex items-center space-x-3">
-                      <input type="checkbox" className="form-checkbox text-blue-500 mr-3 w-6 h-6 bg-gray-700 border-gray-500"
-                        checked={!!checkedItems.find((item : any) => Object.keys(item)[0] === subcategory._id.toString())}
-                        onChange={() => handleChecked(idx, subcategory._id.toString())}
-                      />
-                      <span className="text-white text-lg">{subcategory.name}</span>
-                    </div>
-                   {!!checkedItems.find((item : any) => Object.keys(item)[0] === subcategory._id.toString()) && (
-                      <div className='flex'>
-                        <input
-                        type='file'
-                        accept='image/*'
-                        className='hidden'
-                        onChange={(e) => handleFileChange(idx, e, subcategory)}
-                        id={`subcat-file-${subcategory._id}`}
-                      />
-                     <label htmlFor={`subcat-file-${subcategory._id}`} 
-                       className='flex text-bold items-center justify-center w-24 h-10 bg-slate-100 text-black rounded-lg cursor-pointer hover:bg-slate-200 hover:-translate-y-1 transition-all duration-300 ease-in-out mr-2'
-                       >Upload Icon</label>
+                  const matchedIcon: any = iconFileUrl.find((item: any) => Object.keys(item)[0] === subcategory._id.toString());
+                  return (
+                    <li key={subcategory._id || idx} className="flex items-center justify-between space-x-3 p-3">
+                      <div className="flex items-center space-x-3">
+                        <input type="checkbox" className="form-checkbox text-blue-500 mr-3 w-6 h-6 bg-gray-700 border-gray-500"
+                          checked={!!checkedItems.find((item: any) => Object.keys(item)[0] === subcategory._id.toString())}
+                          onChange={() => handleChecked(idx, subcategory._id.toString())}
+                        />
+                        <span className="text-white text-lg">{subcategory.name}</span>
+                      </div>
+                      {!!checkedItems.find((item: any) => Object.keys(item)[0] === subcategory._id.toString()) && (
+                        <div className='flex'>
+                          <input
+                            type='file'
+                            accept='image/*'
+                            className='hidden'
+                            onChange={(e) => handleFileChange(idx, e, subcategory)}
+                            id={`subcat-file-${subcategory._id}`}
+                          />
+                          <label htmlFor={`subcat-file-${subcategory._id}`}
+                            className='flex text-bold items-center justify-center w-24 h-10 bg-slate-100 text-black rounded-lg cursor-pointer hover:bg-slate-200 hover:-translate-y-1 transition-all duration-300 ease-in-out mr-2'
+                          >Upload Icon</label>
 
-                      {matchedIcon && matchedIcon[subcategory._id.toString()] &&
-                      <>
-                        <h1 className="bg-green-50 inline-flex items-center text-green-600 text-lg font-medium mr-2 px-2.5 py-0.5 rounded h-10 w-24">Uploaded</h1>
-                        <img src={matchedIcon[subcategory._id.toString()]} className='w-16 h-10 rounded-lg mr-2 object-cover object-center border border-gray-500 cursor-pointer'
-                        onClick={() => handleImageClick(matchedIcon[subcategory?._id.toString()] ?? '')}
-                        alt=''/> 
-                        <button className='bg-transparent rounded-lg p-1 hover:bg-red-100 transition-all duration-300 ease-in-out ml-2' onClick={() => handleUnChecked(idx, subcategory?._id.toString())}>
-                          <X size={20} className='text-red-500'/>
-                        </button>
-                      </>
-                      }
-                    </div>
-                    )}
-                    {isOpen && openedUrl && (
-                      <div className="fixed inset-0 flex items-center justify-center">
-                        <div className="fixed inset-0 bg-black opacity-10" onClick={() => setIsOpen(false)}></div>
+                          {matchedIcon && matchedIcon[subcategory._id.toString()] &&
+                            <>
+                              <h1 className="bg-green-50 inline-flex items-center text-green-600 text-lg font-medium mr-2 px-2.5 py-0.5 rounded h-10 w-24">Uploaded</h1>
+                              <img src={matchedIcon[subcategory._id.toString()]} className='w-16 h-10 rounded-lg mr-2 object-cover object-center border border-gray-500 cursor-pointer'
+                                onClick={() => handleImageClick(matchedIcon[subcategory?._id.toString()] ?? '')}
+                                alt='' />
+                              <button className='bg-transparent rounded-lg p-1 hover:bg-red-100 transition-all duration-300 ease-in-out ml-2' onClick={() => handleUnChecked(idx, subcategory?._id.toString())}>
+                                <X size={20} className='text-red-500' />
+                              </button>
+                            </>
+                          }
+                        </div>
+                      )}
+                      {isOpen && openedUrl && (
+                        <div className="fixed inset-0 flex items-center justify-center">
+                          <div className="fixed inset-0 bg-black opacity-10" onClick={() => setIsOpen(false)}></div>
                           <div className="absolute w-1/2 h-96 bg-white rounded-lg shadow-lg" onClick={(e) => e.stopPropagation()}>
-                            <img src={openedUrl} className="w-full h-full object-contain p-4 z-20" alt=''/>
+                            <img src={openedUrl} className="w-full h-full object-contain p-4 z-20" alt='' />
                             <button
                               className="absolute bg-red-400 rounded-full p-1 -top-2 -right-2 hover:bg-red-600"
                               onClick={() => setIsOpen(false)}
                             >
                               <X size={20} />
                             </button>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </li>
-                )
-              })}
+                      )}
+                    </li>
+                  )
+                })}
               </ul>
               <button className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50" onClick={handleAddIconImage}>
                 Save Changes
