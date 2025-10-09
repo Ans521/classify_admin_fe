@@ -59,7 +59,7 @@ export const usePagination = ({ list, itemsPerPage }: PaginationProps) => {
     const term = searchTerm.toLowerCase();
     return (
         (typeof provider?.name === 'string' && provider.name.toLowerCase().includes(term)) ||
-        provider?.pincode?.toString().includes(term) ||
+        provider?.pinCode?.toString().includes(term) ||
         provider?.phoneNo?.toString().includes(term)
     );
 });

@@ -248,7 +248,7 @@ const ProviderUserCard = ({ tittle, subtittle, modal, pagination, filters, list,
                         </td>}
                         <td>
                           <div className="text-sm text-gray-900 text-center">
-                            {provider.pincode}
+                            {provider.pinCode}
                           </div>
                         </td>
                         {isProvider &&<td className="px-6 py-4 whitespace-nowrap">
