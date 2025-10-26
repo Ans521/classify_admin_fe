@@ -48,6 +48,7 @@ const UserDocument: React.FC = () => {
       const response = await api.get(`/get-provider-list`);
       if (Array.isArray(response.data?.data)) {
         const provider = response.data?.data.find((p: Provider) => p._id === id);
+        console.log("provider", provider);
         dispatch(setProviderId(provider?._id));
         if (provider?.imageUrl) {
           dispatch(setImage(provider.imageUrl));
@@ -167,20 +168,20 @@ const UserDocument: React.FC = () => {
             )}
 
             <div className="flex justify-center items-center space-x-8 mt-6">
-              <div
-                // to={'/service-provider/view'}
-                className="px-8 py-3 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
+              <Link
+                to={'/service-provider/view'}
+                className="px-8 py-3 bg-green-500 cursor-pointer text-white font-semibold rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
                 onClick={() => handleStatus('approve')}
               >
                 Approve
-              </div>
-              <div
-                // to={'/service-provider/view'} 
-                className="px-8 py-3 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
+              </Link>
+              <Link
+                to={'/service-provider/view'} 
+                className="px-8 py-3 bg-red-500 cursor-pointer text-center text-white font-semibold rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
                 onClick={() => handleStatus('reject')}
               >
                 Reject
-              </div>
+              </Link>
             </div>
           </div>
         </div>

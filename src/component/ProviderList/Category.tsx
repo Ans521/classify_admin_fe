@@ -3,14 +3,15 @@ import { X, Plus, Trash2, Star } from 'lucide-react';
 import Sidebar from '../sidebar/sidebar';
 import Navbar from '../navbar/navbar';
 import axios from 'axios';
-
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 // uploadfile toh category kii image ke liye hai, agr ye true hai toh uploaded green dikhega and also we can see the image from accessing the index from uploadfileurl
 // image mei image ka url hai jo humne upload kiya hai usse pdne ke liye hai from createurl object
 // uploadfileurl wo link hai jo upload krke mujhe mila hai then usse map kiya so that we i add the new category then i can send it with the specific subcategory
 
 interface Category {
-  id?: string;
+  _id?: string;
+  idx?: number;
   name: string;
   isMain: boolean;
   subcategories: string[];
@@ -30,20 +31,19 @@ const Category: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [catId, setCatId] = useState<string | null>(null);
   const [subCatId, setSubCatId] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const token = localStorage.getItem("token");
 
   const api = axios.create({
     baseURL: 'http://82.180.144.143:4000/api'
   });
-  console.log("categories", categories);
 
   const handleAddCategory = async () => {
     if (!newCategory.trim()) {
       alert("fill category")
       return;
     }
-
 
     try {
       const validSubcategories = newSubcategories.filter(sub => sub.trim());
@@ -93,7 +93,6 @@ const Category: React.FC = () => {
           alert('Category updated successfully');
         }
       }
-
     } catch (error) {
       console.error('Error adding category:', error);
       alert('Failed to add category or category already exists');
@@ -122,7 +121,14 @@ const Category: React.FC = () => {
   useEffect(() => {
     console.log("helloooooooo")
     allCategories();
-  }, [uploadedFileUrl, newSubcategories, newCategory, uploadedFile, checkedItems, iconFileUrl]);
+  }, []); // Only run once on mount
+
+  // Separate useEffect for when we need to refresh categories after operations
+  // useEffect(() => {
+  //   if (!isLoading) {
+  //     allCategories();
+  //   }
+  // }, [uploadedFileUrl, newSubcategories, newCategory, uploadedFile, checkedItems, iconFileUrl]);
 
   const allCategories = async () => {
     try {
@@ -134,13 +140,13 @@ const Category: React.FC = () => {
         headers: {
           Authorization: `Bearer ${token}`,
         }
-      },);
-      console.log("Indiamart share data and data from api")
-      console.log("data", data);
+      });
       setCategories(data.data);
+      setIsLoading(false);
       console.log("categories", categories);
     } catch (error) {
       console.error('Error fetching categories:', error);
+      setIsLoading(false);
     }
   }
 
@@ -385,6 +391,57 @@ const Category: React.FC = () => {
       alert('Failed to update main category');
     }
   };
+
+
+  const updateIdxDb = async (updatedCategories: any) => {
+    console.log("categories in the update idx db", updatedCategories);
+    try {
+      const response = await api.put('/update-idx-db', 
+        {
+          categories: updatedCategories
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      console.log("response", response);
+      if(response.status === 200) {
+        alert('updated successfully');
+        return true;
+      } else {
+        alert('Failed to update idx');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error updating idx db:', error);
+    }
+  }
+
+  console.log("categories", categories);
+  const handleOnDragEnd = async (result: any) => {
+    console.log("result", result);
+    if (!result.destination || isLoading) {
+      return;
+    }
+    console.log("categories before reordering", categories);
+   
+    // Create a new array copy to avoid mutating state
+    const newCategories = [...categories];
+    const [reorderedSourceItem] = newCategories.splice(result.source.index, 1);
+    newCategories.splice(result.destination.index, 0, reorderedSourceItem);
+
+    const updatedCategories = newCategories.map((cat : any, idx : number) => ({ ...cat, idx }))
+    setCategories(updatedCategories);
+    await updateIdxDb(updatedCategories);
+    allCategories();
+    //  array.splice(index, 0, newItem);
+    //index → where to insert;
+    // 0 → means remove 0 elements (just insert, don’t delete);
+    // newItem → what you want to insert;
+  }
+  
   return (
     <div className="flex h-screen bg-[#FFFFFF]">
       <Sidebar />
@@ -472,60 +529,95 @@ const Category: React.FC = () => {
               <h1 className='text-2xl text-center font-bold text-gray-800 mb-6'>All Categories</h1>
               <div>
                 <div className="space-y-4">
-                  {categories && categories?.map((category: any) => (
-                    <div key={category?.id} className="border border-gray-100 rounded-lg shadow-sm p-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <h3 className="text-2xl font-medium ml-2 text-gray-800">Category : {category.category}</h3>
-                        <div className='flex items-center'>
-                          <div className='flex items-center gap-1' onClick={() => handleIsMainCat(category?._id, category?.isMain)}>
-                            <Star size={20} className={`${category?.isMain ? 'text-yellow-500 fill-yellow-400' : 'text-gray-500 fill-gray-400'} mr-2`} />
-                          </div>
-                          <button
-                            onClick={() => handleDeleteCategory(category?._id?.toString(), true)}
-                            className="flex items-center space-x-1 px-3 py-1.5 text-red-500 hover:bg-red-50 rounded-lg focus:outline-none transition-colors"
-                            title="Delete category"
-                          >
-                            <Trash2 size={16} />
-                            <span className="text-sm">Delete Category</span>
-                          </button>
-                          <button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded"
-                            onClick={() => {
-                              handleEditCategory(category?._id?.toString())
-                              setIsEditMode(true)
-                            }}>
-                            Edit
-                          </button>
-                        </div>
-
-                      </div>
-                      <div className="space-y-2">
-                        {category?.subcategories?.map((subcategory: any, index: any) => (
-                          <div key={index} className="flex  justify-between space-x-3 items-center pl-4">
-                            <div className="flex items-center space-x-3">
-                              <span className="text-gray-600">{index + 1}.</span>
-                              <span className="text-gray-600">{subcategory.name}</span>
-                              <img src={subcategory.image} alt='' className='w-12 h-8 rounded-lg' onClick={() => handleImageClick(subcategory.image)} />
+                  {isLoading ? (
+                    <div className="text-center text-gray-500 py-8">
+                      Loading categories...
+                    </div>
+                  ) : (
+                    <DragDropContext onDragEnd={handleOnDragEnd}>
+                      <Droppable 
+                        droppableId="categories" 
+                        isDropDisabled={isLoading} 
+                        isCombineEnabled={false}
+                        ignoreContainerClipping={false}
+                        direction="vertical"
+                        type="DEFAULT"
+                      >
+                        {(provided) => (
+                          <div ref={provided.innerRef} {...provided.droppableProps}>
+                            {categories && categories.length > 0 ? categories.filter(category => category?._id).map((category: any, index: number) => (
+                              <Draggable 
+                                key={category?._id?.toString()} 
+                                draggableId={category?._id?.toString()} 
+                                index={category?.idx}
+                                isDragDisabled={false}
+                                disableInteractiveElementBlocking={false}
+                              >
+                        {(provided: any) => (
+                          <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className="border border-gray-100 rounded-lg shadow-sm p-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <h3 className="text-2xl font-medium ml-2 text-gray-800">Category : {category.category}</h3>
+                          <div className='flex items-center'>
+                            <div className='flex items-center gap-1' onClick={() => handleIsMainCat(category?._id, category?.isMain)}>
+                              <Star size={20} className={`${category?.isMain ? 'text-yellow-500 fill-yellow-400' : 'text-gray-500 fill-gray-400'} mr-2`} />
                             </div>
                             <button
+                              onClick={() => handleDeleteCategory(category?._id?.toString(), true)}
                               className="flex items-center space-x-1 px-3 py-1.5 text-red-500 hover:bg-red-50 rounded-lg focus:outline-none transition-colors"
                               title="Delete category"
-                              onClick={() => handleDeleteCategory(subcategory._id?.toString(), false)}
                             >
-                              <X size={16} />
+                              <Trash2 size={16} />
+                              <span className="text-sm">Delete Category</span>
+                            </button>
+                            <button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded"
+                              onClick={() => {
+                                handleEditCategory(category?._id?.toString())
+                                setIsEditMode(true)
+                              }}>
+                              Edit
                             </button>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
 
+                        </div>
+                        <div className="space-y-2">
+                          {category?.subcategories?.map((subcategory: any, index: any) => (
+                            <div key={index} className="flex  justify-between space-x-3 items-center pl-4">
+                              <div className="flex items-center space-x-3">
+                                <span className="text-gray-600">{index + 1}.</span>
+                                <span className="text-gray-600">{subcategory.name}</span>
+                                <img src={subcategory.image} alt='' className='w-12 h-8 rounded-lg' onClick={() => handleImageClick(subcategory.image)} />
+                              </div>
+                              <button
+                                className="flex items-center space-x-1 px-3 py-1.5 text-red-500 hover:bg-red-50 rounded-lg focus:outline-none transition-colors"
+                                title="Delete category"
+                                onClick={() => handleDeleteCategory(subcategory._id?.toString(), false)}
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                          </div>
+                        )}
+                        </Draggable>
+                      )) : (
+                        <div className="text-center text-gray-500 py-8">
+                          No categories available
+                        </div>
+                      )}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
+                    </DragDropContext>
+                  )}
+                </div>
               </div>
             </div>
             <div className="bg-gray-600 text-white mt-4 p-4 border border-gray-700 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold text-white mb-4">All Subcategories (Unified List)</h2>
               <ul className="space-y-2">
-                {categories?.flatMap((category: any, idx: any) => category.subcategories || []).map((subcategory: any, idx: number) => {
+                {categories?.flatMap((category: any, idx: any) => category?.subcategories || []).map((subcategory: any, idx: number) => {
                   const matchedIcon: any = iconFileUrl.find((item: any) => Object.keys(item)[0] === subcategory._id.toString());
                   return (
                     <li key={subcategory._id || idx} className="flex items-center justify-between space-x-3 p-3">
@@ -553,7 +645,7 @@ const Category: React.FC = () => {
                             <>
                               <h1 className="bg-green-50 inline-flex items-center text-green-600 text-lg font-medium mr-2 px-2.5 py-0.5 rounded h-10 w-24">Uploaded</h1>
                               <img src={matchedIcon[subcategory._id.toString()]} className='w-16 h-10 rounded-lg mr-2 object-cover object-center border border-gray-500 cursor-pointer'
-                                onClick={() => handleImageClick(matchedIcon[subcategory?._id.toString()] ?? '')}
+                                // onClick={() => handleImageClick(matchedIcon[subcategory?._id.toString()] ?? '')}
                                 alt='' />
                               <button className='bg-transparent rounded-lg p-1 hover:bg-red-100 transition-all duration-300 ease-in-out ml-2' onClick={() => handleUnChecked(idx, subcategory?._id.toString())}>
                                 <X size={20} className='text-red-500' />

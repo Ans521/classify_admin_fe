@@ -14,6 +14,7 @@ interface FormData {
   subcategory: string;
   address: string;
   aadharAddress: string;
+  pinCode: string;
   AC: null,
   ACB: null,
   PH: null,
@@ -62,6 +63,7 @@ const AddProvider: React.FC = () => {
     name: "",
     address: "",
     aadharAddress: "",
+    pinCode: "",
     category: "",
     subcategory: "",
     AC: null,
@@ -77,7 +79,6 @@ const AddProvider: React.FC = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof typeof formData) => {
     const file = e.target.files?.[0];
-
 
     if (file) {
       const imagePreview = URL.createObjectURL(file);
@@ -161,6 +162,7 @@ const AddProvider: React.FC = () => {
           subcategory: "",
           address: "",
           aadharAddress: "",
+          pinCode: "",
           AC: null,
           ACB: null,
           PC:  null,
@@ -276,7 +278,7 @@ const AddProvider: React.FC = () => {
                     )}
                   </div>
                 </div>
-
+                    
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
                   <textarea
@@ -300,6 +302,19 @@ const AddProvider: React.FC = () => {
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent focus:outline-none"
                     rows={3}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Pin Code</label>
+                  <input
+                    type="text"
+                    name="pinCode"
+                    value={formData.pinCode}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#6362E7] focus:border-transparent focus:outline-none"
+                    placeholder="Enter pin code"
                     required
                   />
                 </div>
