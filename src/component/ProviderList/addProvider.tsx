@@ -38,6 +38,7 @@ const AddProvider: React.FC = () => {
   const dispatch = useAppDispatch();
 
   const phoneNumber = useAppSelector((state: any) => state.register.phoneNumber);
+  console.log("phoneNumber", phoneNumber)
   useEffect(() => {
     // If no phone number in context, redirect to phone verification
     if (!phoneNumber) {
@@ -125,29 +126,21 @@ const AddProvider: React.FC = () => {
     e.preventDefault();
     try {
       const dataToSend = new FormData();
-
+      dataToSend.append('phone', phoneNumber);
       Object.entries(formData).forEach(([key, value]) => {
         if (value instanceof File) {
-          // Append file directly
-         
-          
-          dataToSend.append(key, value);
+           dataToSend.append(key, value);
         } else if (typeof value === "object") {
-          
-          dataToSend.append(key, JSON.stringify(value));
+          console.log("object", value)
+           dataToSend.append(key, JSON.stringify(value));
         } else if (value !== null && value !== undefined) {
-          
-          dataToSend.append(key, value.toString());
+           dataToSend.append(key, value.toString());
         }
       });
 
-
-
       console.log("datatosend", dataToSend)
 
-      dataToSend.append('phone', phoneNumber)
       await addProvider(dataToSend).unwrap();
-
       
         alert("Provider added successfully");
         setFileUrls({
@@ -187,10 +180,10 @@ const AddProvider: React.FC = () => {
   };
 
   const handleSubcategorySelect = (option: any) => {
-    console.log("option", option)
     setSelectedSubcategory(option?.name);
+    console.log("option", option)
     setFormData(prev => ({ ...prev, subcategory: option }));
-    setIsSubcategoryOpen(false);
+    setIsSubcategoryOpen(false);  
   };
 
   return (
