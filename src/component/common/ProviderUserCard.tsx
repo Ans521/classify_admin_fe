@@ -202,9 +202,16 @@ const ProviderUserCard = ({ tittle, subtittle, modal, pagination, filters, list,
                       <th className={`px-6 py-3 ${isProvider ? 'text-left' : 'text-center'} text-xs font-medium text-gray-500 uppercase tracking-wider`}>
                         Pincode
                       </th>
-                      {isProvider && <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {isProvider &&
+                      <>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Subcategory
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Action
-                      </th>}
+                      </th>
+                      </>
+                      }
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -251,7 +258,12 @@ const ProviderUserCard = ({ tittle, subtittle, modal, pagination, filters, list,
                             {provider.pinCode}
                           </div>
                         </td>
-                        {isProvider &&<td className="px-6 py-4 whitespace-nowrap">
+                        {isProvider &&
+                        <>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {provider.subcategory}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
                           {modal.isEditOpen && modal.editingProviderId === provider._id.toString() && (
                             <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" onClick={modal.closeEditModal}>
                               <div className="bg-white p-8 rounded-xl w-[400px] shadow-xl" onClick={(e) => e.stopPropagation()}>
@@ -294,7 +306,7 @@ const ProviderUserCard = ({ tittle, subtittle, modal, pagination, filters, list,
                                     <button
                                       onClick={modal.closeEditModal}
                                       className="px-8 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-all duration-200"
-                                    >
+                                      >
                                       Cancel
                                     </button>
                                   </div>
@@ -308,7 +320,9 @@ const ProviderUserCard = ({ tittle, subtittle, modal, pagination, filters, list,
                           >
                             <Pencil size={16} />
                           </button>
-                        </td>}
+                        </td>
+                        </>
+                        }
                       </tr>
                     ))}
                   </tbody>
