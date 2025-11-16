@@ -114,6 +114,23 @@ const ViewProvider: React.FC = () => {
     }
   }
 
+  const handleDelete = async (id: string, isProvider: boolean) => {
+    try {
+      const endpoint = isProvider ? `/delete-provider/${id}` : `/delete-user/${id}`;
+      const response = await api.delete(endpoint);
+      console.log("response", response)
+      if (response.status === 200) {
+        alert(isProvider ? "Provider deleted successfully" : "User deleted successfully");
+        handleViewDocument();
+      } else {
+        alert(`Failed to delete ${isProvider ? 'provider' : 'user'}`);
+      }
+    } catch (error) {
+      console.error(`Error deleting ${isProvider ? 'provider' : 'user'}:`, error);
+      alert(`Failed to delete ${isProvider ? 'provider' : 'user'}`);
+    }
+  }
+
   useEffect(() => {
     handleViewDocument();
   }, []);
@@ -164,6 +181,7 @@ const ViewProvider: React.FC = () => {
           isLoading={isLoading}
           handleStatusUpdate={handleStatusUpdate}
           handleApply={handleApply}
+          handleDelete={handleDelete}
         />
       </div>
     </div>

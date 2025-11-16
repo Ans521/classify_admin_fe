@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { Pencil, ChevronLeft, ChevronRight, Search, Filter, X, Phone } from 'lucide-react';
+import { Pencil, ChevronLeft, ChevronRight, Search, Filter, X, Phone, Trash2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ImmutableStateInvariantMiddlewareOptions } from '@reduxjs/toolkit';
@@ -62,10 +62,11 @@ export interface ProviderChildProps {
   list: ServiceProvider[];
   isLoading: boolean;
   handleStatusUpdate?: (providerId: string, status: string) => void;
+  handleDelete?: (id: string, isProvider: boolean) => void;
 }
 
 
-const ProviderUserCard = ({ tittle, subtittle, modal, pagination, filters, list, isLoading, handleStatusUpdate, handleApply }: ProviderChildProps) => {
+const ProviderUserCard = ({ tittle, subtittle, modal, pagination, filters, list, isLoading, handleStatusUpdate, handleApply, handleDelete }: ProviderChildProps) => {
   const [isProvider, setIsProvider] = useState(false);
   const location = useLocation();
 
@@ -212,6 +213,9 @@ const ProviderUserCard = ({ tittle, subtittle, modal, pagination, filters, list,
                       </th>
                       </>
                       }
+                      {!isProvider && <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Action
+                      </th>}
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -264,65 +268,99 @@ const ProviderUserCard = ({ tittle, subtittle, modal, pagination, filters, list,
                           {provider.subcategory}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {modal.isEditOpen && modal.editingProviderId === provider._id.toString() && (
-                            <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" onClick={modal.closeEditModal}>
-                              <div className="bg-white p-8 rounded-xl w-[400px] shadow-xl" onClick={(e) => e.stopPropagation()}>
-                                <div className="flex justify-between items-center mb-6">
-                                  <h2 className="text-2xl font-bold text-gray-800">Edit Provider</h2>
-                                  <button
-                                    onClick={modal.closeEditModal}
-                                    className="text-gray-400 hover:text-gray-600 transition-colors"
-                                  >
-                                    <X size={24} />
-                                  </button>
-                                </div>
-
-                                <div className="flex flex-col space-y-6">
-                                  <div className='text-center'>
-                                    <h3 className="text-lg text-gray-700 font-medium">Edit Provider Verification</h3>
-                                  </div>
-
-                                  <div className='grid grid-cols-2 gap-4 px-4'>
-                                    <button className='px-4 py-3 bg-green-100 text-green-700 font-semibold rounded-lg hover:bg-green-600 hover:text-white transition-all duration-200' onClick={() => {
-                                      modal.handleEditClick(provider._id.toString())
-                                      modal.setIsEditOpen(false)
-                                      handleStatusUpdate!(provider._id?.toString(), 'approved')
-                                    }}>
-                                      Approve
-                                    </button>
-                                    <button className='px-4 py-3 bg-red-100 text-red-700 font-semibold rounded-lg hover:bg-red-600 hover:text-white transition-all duration-200' onClick={() => {
-                                      modal.handleEditClick(provider._id.toString())
-                                      modal.setIsEditOpen(false)
-                                      handleStatusUpdate!(provider._id.toString(), 'rejected')
-                                    }}>
-                                      Reject
-                                    </button>
-                                    {/* <button className='px-4 py-3 bg-blue-100 text-blue-700 font-semibold rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-200'>
-                                        Edit
-                                      </button> */}
-                                  </div>
-
-                                  <div className="flex justify-center pt-4">
+                          <div className="flex items-center gap-2">
+                            {modal.isEditOpen && modal.editingProviderId === provider._id.toString() && (
+                              <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" onClick={modal.closeEditModal}>
+                                <div className="bg-white p-8 rounded-xl w-[400px] shadow-xl" onClick={(e) => e.stopPropagation()}>
+                                  <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-2xl font-bold text-gray-800">Edit Provider</h2>
                                     <button
                                       onClick={modal.closeEditModal}
-                                      className="px-8 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-all duration-200"
-                                      >
-                                      Cancel
+                                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                                    >
+                                      <X size={24} />
                                     </button>
+                                  </div>
+
+                                  <div className="flex flex-col space-y-6">
+                                    <div className='text-center'>
+                                      <h3 className="text-lg text-gray-700 font-medium">Edit Provider Verification</h3>
+                                    </div>
+
+                                    <div className='grid grid-cols-2 gap-4 px-4'>
+                                      <button className='px-4 py-3 bg-green-100 text-green-700 font-semibold rounded-lg hover:bg-green-600 hover:text-white transition-all duration-200' onClick={() => {
+                                        modal.handleEditClick(provider._id.toString())
+                                        modal.setIsEditOpen(false)
+                                        handleStatusUpdate!(provider._id?.toString(), 'approved')
+                                      }}>
+                                        Approve
+                                      </button>
+                                      <button className='px-4 py-3 bg-red-100 text-red-700 font-semibold rounded-lg hover:bg-red-600 hover:text-white transition-all duration-200' onClick={() => {
+                                        modal.handleEditClick(provider._id.toString())
+                                        modal.setIsEditOpen(false)
+                                        handleStatusUpdate!(provider._id.toString(), 'rejected')
+                                      }}>
+                                        Reject
+                                      </button>
+                                      {/* <button className='px-4 py-3 bg-blue-100 text-blue-700 font-semibold rounded-lg hover:bg-blue-600 hover:text-white transition-all duration-200'>
+                                          Edit
+                                        </button> */}
+                                    </div>
+
+                                    <div className="flex justify-center pt-4">
+                                      <button
+                                        onClick={modal.closeEditModal}
+                                        className="px-8 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-all duration-200"
+                                        >
+                                        Cancel
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
-                          <button
-                            onClick={() => modal.handleEditClick(provider._id.toString())}
-                            className="p-2 bg-[#E8F8F3] text-[#38C677] rounded-full hover:bg-[#d1f3e9] transition-colors"
-                          >
-                            <Pencil size={16} />
-                          </button>
+                            )}
+                            <button
+                              onClick={() => modal.handleEditClick(provider._id.toString())}
+                              className="p-2 bg-[#E8F8F3] text-[#38C677] rounded-full hover:bg-[#d1f3e9] transition-colors"
+                            >
+                              <Pencil size={16} />
+                            </button>
+                            {handleDelete && (
+                              <button
+                                onClick={() => {
+                                  if (window.confirm(`Are you sure you want to delete ${provider.name}?`)) {
+                                    handleDelete(provider._id.toString(), true);
+                                  }
+                                }}
+                                className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors"
+                                title="Delete Provider"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </div>
                         </td>
                         </>
                         }
+                        {!isProvider && (
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {handleDelete && (
+                              <div className="flex items-center justify-center">
+                                <button
+                                  onClick={() => {
+                                    if (window.confirm(`Are you sure you want to delete ${provider.name}?`)) {
+                                      handleDelete(provider._id.toString(), false);
+                                    }
+                                  }}
+                                  className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition-colors"
+                                  title="Delete User"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
