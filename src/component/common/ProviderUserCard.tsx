@@ -191,6 +191,9 @@ const ProviderUserCard = ({ tittle, subtittle, modal, pagination, filters, list,
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         {isProvider ? "Service Provider Name" : "User Name"}
                       </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Email
+                      </th>
                       <th className="px-6 py-3 text-xs text-left font-medium text-gray-500 uppercase tracking-wider">
                         {isProvider ? "Provider Unique ID" : "User Unique ID"}
                       </th>
@@ -230,6 +233,11 @@ const ProviderUserCard = ({ tittle, subtittle, modal, pagination, filters, list,
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900 group-hover:text-[#6362E7]">
                             {provider?.name}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {provider?.email || 'N/A'}
                           </div>
                         </td>
                         <td className="px-8 py-4 text-left whitespace-nowrap">
