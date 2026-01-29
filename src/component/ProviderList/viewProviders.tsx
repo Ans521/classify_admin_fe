@@ -113,7 +113,24 @@ const ViewProvider: React.FC = () => {
       console.error("Error updating provider status:", error);
     }
   }
-
+ const handleDocumentApprovedSatusUpdate = async (providerId: string, status: string) => {
+    try {
+      const response = await api.put(`/approveProviderDocument/${providerId}`, { status }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log("response", response)
+      if (response.status === 200) {
+        alert("Provider document status updated successfully");
+        handleViewDocument();
+      } else {
+        alert("Failed to update provider document status");
+      }
+    } catch (error) {
+      console.error("Error updating provider document status:", error);
+    }
+  }
   const handleDelete = async (id: string, isProvider: boolean) => {
     try {
       const endpoint = isProvider ? `/delete-provider/${id}` : `/delete-user/${id}`;
@@ -180,6 +197,7 @@ const ViewProvider: React.FC = () => {
           list={providerList}
           isLoading={isLoading}
           handleStatusUpdate={handleStatusUpdate}
+          handleDocumentApprovedSatusUpdate={handleDocumentApprovedSatusUpdate}
           handleApply={handleApply}
           handleDelete={handleDelete}
         />
